@@ -1,17 +1,21 @@
+function [big_stat_shit,most_phases_eq,num_phase] = find_info_shit(oridStruct) 
 %find which orid has the most phases picked
 y=fields(oridStruct);
 for i=1:numel(y)
    p(i)=numel(oridStruct.(y{i}).phase);
 end
 clear i
-[val,ind]=max(p)
+[val,ind]=max(p);
+most_phases_eq = y{ind};
+num_phase=val;
+
 %returns val=50 and ind=223, eq 2166
 %explore that motherfucker
-Or=2166;
-[w_raw,OrS,stations_inEq] = get_wf(Or,oridStruct)
+%Or=2166;
+%[w_raw,OrS,stations_inEq] = get_wf(Or,oridStruct)
 %% - same as big_stat_shit.eqs.eq_2166
 % clear stat_shit
-% statz={'timeres','smajax','sminax','sdepth','stime'};
+ statz={'timeres','smajax','sminax','sdepth','stime','deltim'};
 % for s=1:numel(statz)
 %     if s==1
 %         stat_shit.(sprintf('max_%s',statz{s}))=max(oridStruct.(OrS).(statz{s}));
@@ -29,17 +33,13 @@ Or=2166;
 clear big_stat_shit
 for numz=1:numel(y)
     for s=1:numel(statz)
-        if strcmp(statz{s},'timeres')
+        if strcmp(statz{s},'timeres') || strcmp(statz{s},'deltim')
             big_stat_shit.eqs.(y{numz}).(sprintf('max_%s',statz{s}))=max(oridStruct.(y{numz}).(statz{s}));
             big_stat_shit.eqs.(y{numz}).(sprintf('min_%s',statz{s}))=min(oridStruct.(y{numz}).(statz{s}));
             big_stat_shit.eqs.(y{numz}).(sprintf('std_%s',statz{s}))=std(oridStruct.(y{numz}).(statz{s}));
             big_stat_shit.eqs.(y{numz}).(sprintf('mean_%s',statz{s}))=mean(oridStruct.(y{numz}).(statz{s}));
             big_stat_shit.eqs.(y{numz}).(sprintf('range_%s',statz{s}))=range(oridStruct.(y{numz}).(statz{s}));
         else
-            big_stat_shit.eqs.(y{numz}).(statz{s})=oridStruct.(y{numz}).(statz{s})(1);
-            big_stat_shit.eqs.(y{numz}).(statz{s})=oridStruct.(y{numz}).(statz{s})(1);
-            big_stat_shit.eqs.(y{numz}).(statz{s})=oridStruct.(y{numz}).(statz{s})(1);
-            big_stat_shit.eqs.(y{numz}).(statz{s})=oridStruct.(y{numz}).(statz{s})(1);
             big_stat_shit.eqs.(y{numz}).(statz{s})=oridStruct.(y{numz}).(statz{s})(1);
         end
     end
@@ -53,6 +53,7 @@ for s=1:numel(statz)
         h.sdepth(numz)=oridStruct.(y{numz}).sdepth(1);
         h.stime(numz)=oridStruct.(y{numz}).stime(1);
         h.timeres(numz)=mean(oridStruct.(y{numz}).timeres);
+        h.deltim(numz)=mean(oridStruct.(y{numz}).deltim);
     end
     big_stat_shit.stats.(statz{s}).(sprintf('max_%s',statz{s}))=max(h.(statz{s}));
     big_stat_shit.stats.(statz{s}).(sprintf('min_%s',statz{s}))=min(h.(statz{s}));
@@ -61,3 +62,4 @@ for s=1:numel(statz)
     big_stat_shit.stats.(statz{s}).(sprintf('range_%s',statz{s}))=range(h.(statz{s}));
 end
 clear numz s h
+end

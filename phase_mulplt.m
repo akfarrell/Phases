@@ -1,4 +1,4 @@
-function phase_mulplt(w, alignWaveforms, max_vals, min_vals)
+function phase_mulplt(w, alignWaveforms, max_vals, min_vals,fil,OrS,timez,oridStruct,style,station,subsetz)
 %added last input for eq_noSwaves to tell difference between split-up
 %waveform objects
 %MULPLT Plot multiple waveform objects in a figure. is inspired by the 
@@ -25,12 +25,13 @@ function phase_mulplt(w, alignWaveforms, max_vals, min_vals)
             alignWaveforms = false;
     end
     
-    if ~exist('id', 'var')
-        id = 'eq';
+    if ~exist('subsetz','var')
+        subsetz = [];
     end
     
+    
     % get the first start time and last end time
-    [starttimes endtimes]=gettimerange(w);
+    [starttimes endtimes]=gettimerange(w)
     snum = nanmin(starttimes);
     enum = nanmax(endtimes);
     
@@ -39,7 +40,17 @@ function phase_mulplt(w, alignWaveforms, max_vals, min_vals)
     durations = endtimes - starttimes;
     maxduration = nanmax(durations); 
     SECSPERDAY = 60 * 60 * 24;
-    
+    if numel(station) >1 || ~strcmp(station,'all')
+        for ind=1:numel(station)
+            staz = get(w,'station');
+            st_ind(ind,:) = find(strcmp(station{ind},staz));
+        end
+        stzz=reshape(st_ind',1,numel(st_ind));
+        w_subset=w(stzz);
+        w=w_subset;
+        max_vals=max_vals(stzz);
+        min_vals=min_vals(stzz);
+    end
     nwaveforms = numel(w);
     
 	h=figure;
@@ -65,27 +76,19 @@ function phase_mulplt(w, alignWaveforms, max_vals, min_vals)
             plot((dnum-min(dnum))*SECSPERDAY, data,'-k');
             set(gca, 'XLim', [0 maxduration*SECSPERDAY]);
         else
-            if strcmp(id, 'selected')
-                if strcmp(chan,'HHZ') == 1 || strcmp(chan, 'HHE') == 1
-                    plot(dnum, data,'-k');
-                end
+            plot(dnum, data,'-k'); 
+            if strcmp(style, 'plotz')
+                set(gca, 'XLim', [snum+datenum(0,0,0,0,0,4) enum-datenum(0,0,0,0,0,14)]); %10,8 PLSP %7,6 PL03
             else
-              plot(dnum, data,'-k');  
+                set(gca, 'XLim', [snum+datenum(0,0,0,0,0,3) enum-datenum(0,0,0,0,0,3)]);
             end
-            set(gca, 'XLim', [snum enum]);
         end
+        wavnum
+        min_vals(wavnum)
+        max_vals(wavnum)
         ylim([min_vals(wavnum) max_vals(wavnum)])
-        if strcmp(id,'selected')
-            if strcmp(chan,'HHZ') == 1 || strcmp(chan, 'HHE') == 1
-                if strcmp(sta,'PL07')==1 || strcmp(sta,'PLSE') == 1 || strcmp(sta,'PLMK') ==1
-                   ylabel(sprintf('%s\n%s ',sta,chan),'FontSize',9,'Rotation',90, 'FontWeight', 'bold');
-                else
-                   ylabel(sprintf('%s\n%s ',sta,chan),'FontSize',9,'Rotation',90); 
-                end
-            end
-        else
-            ylabel(sprintf('%s\n%s ',sta,chan),'FontSize',9,'Rotation',90);
-        end
+        ylabel(sprintf('%s\n%s ',sta,chan),'FontSize',9,'Rotation',90);
+
        
         
         %set(gca,'YTick',[],'YTickLabel',['']);
@@ -95,11 +98,74 @@ function phase_mulplt(w, alignWaveforms, max_vals, min_vals)
         end
         
        
-%         hold on
-%         yl=ylim;
+        hold on
+        indz = find(strcmp(oridStruct.(OrS).sta,sta));
+        yl=ylim;
 %         line([get(w(wavnum), 'EX_ARR_TIME'), get(w(wavnum), 'EX_ARR_TIME')], [yl(1), yl(2)], 'Color', 'k');
 %         hold on
-        %line([time_value, time_value], [yl(1), yl(2)], 'Color', 'k', 'LineStyle', ':', 'LineWidth', 2);
+        if strcmp(style, 'linez')
+            for val=1:numel(indz)
+                line([oridStruct.(OrS).time_phase(indz(val)), oridStruct.(OrS).time_phase(indz(val))], [yl(1), yl(2)], 'Color', 'k', 'LineWidth', 2);
+            end
+            colors={'green','orange','purple','pink','silver'};
+            %for david=1:5
+            for david=1:numel(timez.(sta).refl.P)+1
+                %if david <=4
+                if david <=numel(timez.(sta).refl.P)
+                    time_P = datenum(0,0,0,0,0,timez.(sta).refl.P(david))+min(dnum);
+                    time_S = datenum(0,0,0,0,0,timez.(sta).refl.S(david))+min(dnum);
+                    line([time_P, time_P], [yl(1), yl(2)], 'Color', rgb(colors{david}), 'LineWidth', 2);
+                    line([time_S, time_S], [yl(1), yl(2)], 'Color', rgb(colors{david}), 'LineWidth', 2);
+                else
+                    line([datenum(0,0,0,0,0,timez.(sta).d.P)+min(dnum), datenum(0,0,0,0,0,timez.(sta).d.P)+min(dnum)], [yl(1), yl(2)], 'Color', rgb(colors{end}), 'LineWidth', 2);
+                    line([datenum(0,0,0,0,0,timez.(sta).d.S)+min(dnum), datenum(0,0,0,0,0,timez.(sta).d.S)+min(dnum)], [yl(1), yl(2)], 'Color', rgb(colors{end}), 'LineWidth', 2);
+                end
+            end
+        elseif strcmp(style, 'linez_shifted') % -----------------------in progress----------------------------------------
+            for val=1:numel(indz)
+                line([oridStruct.(OrS).time_phase(indz(val)), oridStruct.(OrS).time_phase(indz(val))], [yl(1), yl(2)], 'Color', 'k', 'LineWidth', 2);
+            end
+            try
+                time_P = datenum(0,0,0,0,0,timez.(sta).d.P)+min(dnum);
+                ind_P = intersect(find(strcmp(oridStruct.(OrS).sta,sta)),find(strcmp(oridStruct.(OrS).phase,'P')));
+                time_Parr = oridStruct.(OrS).time_phase(ind_P);
+                diffzP = time_Parr-time_P;
+            end
+            try
+                time_S = datenum(0,0,0,0,0,timez.(sta).d.S)+min(dnum);
+                ind_S = intersect(find(strcmp(oridStruct.(OrS).sta,sta)),find(strcmp(oridStruct.(OrS).phase,'S')))
+                time_Sarr = oridStruct.(OrS).time_phase(ind_S);
+                diffzS = time_Sarr-time_S;
+            end
+            colors={'green','orange','purple','pink','silver'};
+            %for david=1:5
+            for david=1:numel(timez.(sta).refl.P)+1
+                %if david <=4
+                if david <=numel(timez.(sta).refl.P)
+                    %P
+                    try
+                    time_Pref = datenum(0,0,0,0,0,timez.(sta).refl.P(david))+min(dnum)
+                    line([time_Pref+diffzP, time_Pref+diffzP], [yl(1), yl(2)], 'Color', rgb(colors{david}), 'LineWidth', 2);
+                    %S
+                    time_Sref = datenum(0,0,0,0,0,timez.(sta).refl.S(david))+min(dnum);
+                    line([time_Sref+diffzS, time_Sref+diffzS], [yl(1), yl(2)], 'Color', rgb(colors{david}), 'LineWidth', 2);
+                    end
+                else
+                    try
+                    line([time_P+diffzP, time_P+diffzP], [yl(1), yl(2)], 'Color', rgb(colors{end}), 'LineWidth', 2);
+                    line([time_S+diffzS, time_S+diffzS], [yl(1), yl(2)], 'Color', rgb(colors{end}), 'LineWidth', 2);
+                    end
+                end
+
+                
+            end
+        elseif strcmp(style, 'plotz')
+            for val=1:numel(indz)
+                line([oridStruct.(OrS).time_phase(indz(val)), oridStruct.(OrS).time_phase(indz(val))], [yl(1), yl(2)], 'Color', 'k', 'LineWidth', 2);
+            end
+            data2=data(subsetz(1):subsetz(2));
+            plot(dnum(subsetz(1):subsetz(2)), data2,'-r')
+        end
         %data_construct = [dnum; data]'
 %         if wavnum==1
 %            title('','FontSize',10);
@@ -126,7 +192,10 @@ function phase_mulplt(w, alignWaveforms, max_vals, min_vals)
 %             %datetick('x', 'keeplimits');
 %         end
 %     end
-xlabel('Time');
+xlabel('Time')
 
-%filename = sprintf('%s_%s_waveforms_%1.4f_%1.4f.png',name,id,fil(1),fil(2));
-%hgexport(h, filename, hgexport('factorystyle'), 'Format', 'png');
+if numel(station)>1
+    station={'subset'};
+end
+filename = sprintf('%s_%s %s_waveforms_%1.4f_%1.4f.png',OrS,style,station{1},fil(1),fil(2));
+hgexport(h, filename, hgexport('factorystyle'), 'Format', 'png');
