@@ -1,7 +1,13 @@
 % function high_corrs = phase_hunt_changingNeedle_mins(allorids,oridStruct,P,fil,cutoff_val)
+% find(strcmp(fieldnames(oridStruct),'eq_whatever')) %to find eq
 %orid2166 is origin 203
+%orid2034 is origin 128
+%orid2277 is origin 277
 tic
-%stylie = 'abz'; %%%%% CHANGE!!!---------0----
+clear all;
+fil=[2 25];
+[oridStruct, allorids] = get_eq_info();
+stylie = 'abz'; %%%%% CHANGE!!!---------0----
 ch = {'HHE','HHN','HHZ'};
 cutoff_val = 0.8;
 overall_cutoff = 1.8;
@@ -10,7 +16,7 @@ S_pad = 25;
 SECSPERDAY = 60 * 60 * 24;
 num_samps = 31;
 close all
-for count=203%1:numel(allorids)
+for count=277%1:numel(allorids)
     directory = '/home/a/akfarrell/Uturuncu/Phase/wf_objs';
     filename = sprintf('wf_%d.mat',allorids(count));
     filename_wPath = fullfile(directory,filename);
@@ -24,6 +30,18 @@ for count=203%1:numel(allorids)
     end
     stationz = get(w_clean,'station');
     for count2 = 1:3:numel(w_clean) %43-45 is PLMN 43:3:43
+        clear data_sig
+        clear inds
+        clear lags
+        clear c
+        clear ind_P
+        clear ind_S
+        clear time_Parr
+        clear time_S
+        clear P_ind
+        clear S_ind
+        clear needle
+        clear Haystack_data
         if find(intersect(find(strcmp(oridStruct.(OrS).sta,stationz{count2})),find(strcmp(oridStruct.(OrS).phase,'P'))))==1
             %HHE = count, HHN = count+1, HHZ = count+2
             %find P arrival to rule it out
@@ -63,14 +81,16 @@ for count=203%1:numel(allorids)
                     c.(ch{count3})(valz+1) = xcorr(Haystack_data.(ch{count3})(valz+1:valz+lngY) -...
                         mean(Haystack_data.(ch{count3})(valz+1:valz+lngY)), needle.(ch{count3}) - mean(needle.(ch{count3})),0,'coeff');
                 end
-                c_backup.(ch{count3}) = c.(ch{count3}); %USE THIS VALUE TO ANNOTATE THE 3-COMPONENT PLOTS!!!!!!!!!!!-------------
-                try
-                    if strcmp(stylie,'abz')
-                        c.(ch{count3}) = abs(c.(ch{count3}));
-                    end
-                catch
+                
+                if strcmp(stylie, 'min')
+                    [m,i.(ch{count3})]=min(c.(ch{count3})(P_ind+P_pad:S_ind-S_pad)); %Pad P_ind and S_ind in range for min
+                elseif strcmp(stylie, 'max')
+                    [m,i.(ch{count3})]=max(c.(ch{count3})(P_ind+P_pad:S_ind-S_pad)); %Pad P_ind and S_ind in range for max
+                elseif strcmp(stylie, 'abz')
+                    c_backup.(ch{count3}) = c.(ch{count3}); %USE THIS VALUE TO ANNOTATE THE 3-COMPONENT PLOTS!!!!!!!!!!!-------------
+                    c.(ch{count3}) = abs(c.(ch{count3}));
+                    [m,i.(ch{count3})]=max(c.(ch{count3})(P_ind+P_pad:S_ind-S_pad)); %Pad P_ind and S_ind in range for max of abs val
                 end
-                [m,i.(ch{count3})]=min(c.(ch{count3})(P_ind+P_pad:S_ind-S_pad)); %Pad P_ind and S_ind in range for min
                 i.(ch{count3}) = i.(ch{count3})+P_ind+P_pad;
                 %-------------------------UNCOMMENT PLOT IF WANT TO PLOT - 2 lines
                 %plot_xcorrs(lags, ch{count3}, Haystack_data.(ch{count3}), needle.(ch{count3}), c.(ch{count3}), stationz{count2}, ...
@@ -129,17 +149,6 @@ for count=203%1:numel(allorids)
     %         catch
     %         end
         end
-        clear data_sig
-        clear inds
-        clear c
-        clear ind_P
-        clear ind_S
-        clear time_Parr
-        clear time_S
-        clear P_ind
-        clear S_ind
-        clear needle
-        clear Haystack_data
     end
 end
 clear stylie

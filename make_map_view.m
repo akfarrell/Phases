@@ -2,7 +2,9 @@
 %% RUN APMB_schematic BEFORE THIS!!!
 tic
 close all
-for count=203%1:numel(allorids)
+%orid2166 is origin 203
+%orid2034 is origin 128
+for count=128%1:numel(allorids)
     directory = '/home/a/akfarrell/Uturuncu/Phase/wf_objs';
     filename = sprintf('wf_%d.mat',allorids(count));
     filename_wPath = fullfile(directory,filename);
@@ -33,21 +35,35 @@ for count=203%1:numel(allorids)
     geoshow(arg_borders, 'DefaultEdgeColor', 'black', 'DefaultFaceColor', 'white');
     catch
     end
-    scatterm(oridStruct.eq_2166.lat,oridStruct.eq_2166.lon,100,'d','filled','r')
+    scatterm(oridStruct.(OrS).lat,oridStruct.(OrS).lon,100,'d','filled','r')
     scatterm(-22.27, -67.18, 100,'^','r')
-    site_subset_phase = {'PL03','PLLL','PLMD','PLSP'};
-    site_subset_3phase = {'PLDK','PLJR','PLMK','PLMN'};
-    site_subset_maybe = {'PLSM'};
-    time_vals = {'', '0.51s or 1.23s', '0.47s or 0.79s', '0.45s or 0.72s'};
+    
+    %% Stuff for Orid2034
+    site_subset_phase = {'PL03','PLMK'};
+    site_subset_maybe = {'PLLL','PLQU','PLSS'};
+    
+    %% Stuff for Orid2166
+    %site_subset_phase = {'PL03','PLLL','PLMD','PLSP'};
+    %site_subset_3phase = {'PLDK','PLJR','PLMK','PLMN'};
+    %site_subset_maybe = {'PLSM'};
+    %time_vals = {'', '0.51s or 1.23s', '0.47s or 0.79s', '0.45s or 0.72s'};
+
     %% some more plotting and such
     for count2 = 1:3:numel(w_clean) %43-45 is PLMN 43:3:43
        if find(intersect(find(strcmp(oridStruct.(OrS).sta,stationz{count2})),find(strcmp(oridStruct.(OrS).phase,'P'))))==1
             siteInd = find(strcmp(siteSub.sta, stationz{count2}));
-            [latout,lonout] = reckon(oridStruct.eq_2166.lat(1),oridStruct.eq_2166.lon(1),inf_point.(stationz{count2})(1)/111.12,inf_point.(stationz{count2})(2));
-            inf_point.(stationz{count2})(3) = latout;
-            inf_point.(stationz{count2})(4) = lonout;
+            [latout,lonout] = reckon(oridStruct.(OrS).lat(1),oridStruct.(OrS).lon(1),inf_point.(OrS).(stationz{count2}).infl(1)/111.12,inf_point.(OrS).(stationz{count2}).infl(2));
+            inf_point.(OrS).(stationz{count2}).infl(3) = latout;
+            inf_point.(OrS).(stationz{count2}).infl(4) = lonout;
+            if strcmp(site_subset_phase,stationz{count2})
+                inf_point.(OrS).(stationz{count2}).phase = 'y';
+            elseif strcmp(site_subset_3phase,stationz{count2})
+                inf_point.(OrS).(stationz{count2}).phase = 't';
+            elseif strcmp(site_subset_maybe,stationz{count2})
+                inf_point.(OrS).(stationz{count2}).phase = 'm';    
+            
             if find(strcmp(site_subset_phase,stationz{count2}))
-                scatterm(siteSub.lat(siteInd),siteSub.lon(siteInd),'o','filled','m')
+                %scatterm(siteSub.lat(siteInd),siteSub.lon(siteInd),'o','filled','m')
                 scatterm(latout,lonout,75,'*','m')
             elseif find(strcmp(site_subset_2phase,stationz{count2}))
                 scatterm(siteSub.lat(siteInd),siteSub.lon(siteInd),'o','filled','r')
@@ -55,23 +71,23 @@ for count=203%1:numel(allorids)
                 textm(siteSub.lat(siteInd)+0.015,siteSub.lon(siteInd)+0.01,time_vals{dink},'color','r')
                 scatterm(latout,lonout,75,'*','r')
             elseif find(strcmp(site_subset_maybe,stationz{count2}))
-                scatterm(siteSub.lat(siteInd),siteSub.lon(siteInd),'o','filled','b')
+                %scatterm(siteSub.lat(siteInd),siteSub.lon(siteInd),'o','filled','b')
                 scatterm(latout,lonout,75,'*','b')
             else
-                scatterm(siteSub.lat(siteInd),siteSub.lon(siteInd),'o','filled','k')
+                %scatterm(siteSub.lat(siteInd),siteSub.lon(siteInd),'o','filled','k')
                 scatterm(latout,lonout,75,'*','k')
             end
-            distElev.(stationz{count2}) = sqrt((siteSub.distKM(siteInd))^2 + (siteSub.elev(siteInd)+oridStruct.eq_2166.depth(1))^2);
+            distElev.(stationz{count2}) = sqrt((siteSub.distKM(siteInd))^2 + (siteSub.elev(siteInd)+oridStruct.(OrS).depth(1))^2);
             
             %% Changed to make texty map or less text
-            distVal = sprintf('%s\n%2.2f\n%2.2f',siteSub.sta{siteInd},siteSub.distKM(siteInd),distElev.(stationz{count2}));
-            %distVal = siteSub.sta{siteInd};
+            %distVal = sprintf('%s\n%2.2f\n%2.2f',siteSub.sta{siteInd},siteSub.distKM(siteInd),distElev.(stationz{count2}));
+            distVal = siteSub.sta{siteInd};
             if strcmp(stationz{count2},'PLCM')
-                textm(siteSub.lat(siteInd)+0.03,siteSub.lon(siteInd)-0.025,distVal)
-                %textm(siteSub.lat(siteInd)+0.015,siteSub.lon(siteInd)-0.025,distVal)
+                %textm(siteSub.lat(siteInd)+0.03,siteSub.lon(siteInd)-0.025,distVal)
+                textm(siteSub.lat(siteInd)+0.015,siteSub.lon(siteInd)-0.025,distVal)
             else
-                textm(siteSub.lat(siteInd)-0.03,siteSub.lon(siteInd)-0.025,distVal)
-                %textm(siteSub.lat(siteInd)-0.015,siteSub.lon(siteInd)-0.025,distVal)
+                %textm(siteSub.lat(siteInd)-0.03,siteSub.lon(siteInd)-0.025,distVal)
+                textm(siteSub.lat(siteInd)-0.015,siteSub.lon(siteInd)-0.025,distVal)
             end
             clear latout; clear lonout
         end
@@ -80,7 +96,7 @@ for count=203%1:numel(allorids)
     hold off
     directory = '/home/a/akfarrell/Uturuncu/Phase/';
     %filename = sprintf('inf_points_map_noDist_%d.png',allorids(count));
-    filename = sprintf('inf_points_map_%d.png',allorids(count));
+    filename = sprintf('inf_points_map_%d_combo.png',allorids(count));
     filename_wPath = fullfile(directory,filename);
     hgexport(p, filename_wPath, hgexport('factorystyle'), 'Format', 'png');
 end

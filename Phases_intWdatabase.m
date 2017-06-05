@@ -54,15 +54,15 @@ clear names
 %Specify orid
 Or = 2166
 %2166,2034
-%%
+
 [w_raw,OrS,stations_inEq] = get_wf(Or,oridStruct);
 
-%%
+
 %clean waveforms and sort by distance from earthquake
 %close all;
 fil=[2 25];
 w_clean = waveform_clean(w_raw, filterobject('b', fil, 2));
-%%
+
 sta=unique(get(w_clean,'station'));
 siteStruct = loadSiteTable('/raid/home/a/akfarrell/Uturuncu/dbplutons_alex','lat>=-23');
 % scatterm(siteStruct.lat,siteStruct.lon,100,'*','m')
@@ -78,6 +78,7 @@ for count=1:numel(stations_inEq)
 end
 clear count
 siteSub.distKM=siteSub.dist*111.12;
+%%
 
 if isequal(sta,siteSub.sta)
     n=3;

@@ -7,7 +7,7 @@ scnl = scnlobject(stations_inEq, 'HH*', 'PL');
 inds_phase_p=find(strcmp(oridStruct.(OrS).phase, 'P'))
 stime = min(oridStruct.(OrS).time_phase(inds_phase_p))-datenum(0,0,0,0,0,3)%0.000005
 if any(strcmp(oridStruct.(OrS).phase, 'S'))
-    etime = max(oridStruct.(OrS).time_phase(setdiff(1:end,inds_phase_p)))+datenum(0,0,0,0,0,5)
+    etime = max((max(oridStruct.(OrS).time_phase(setdiff(1:end,inds_phase_p)))+datenum(0,0,0,0,0,5)),max(oridStruct.(OrS).time_phase(inds_phase_p))+datenum(0,0,0,0,0,15))
 else
     etime = max(oridStruct.(OrS).time_phase(inds_phase_p))+datenum(0,0,0,0,0,15)
 end

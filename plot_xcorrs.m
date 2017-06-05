@@ -129,7 +129,7 @@ elseif style == 4
         
         subplot(6,1,count*2)
         plot(1:numel(Haystack.(ch{count})),Haystack.(ch{count}))
-        title(sprintf('Haystack %s %d',ch{count},indz.(ch{count})))
+        title(sprintf('Haystack %s %d %d',ch{count},orid,indz.(ch{count})))
         xlim([0 numel(Haystack.(ch{count}))])
         hold on
         plot(indz.(ch{count}):indz.(ch{count})+numel(needle.HHZ)-1, Haystack.(ch{count})(indz.(ch{count}):indz.(ch{count})+numel(needle.HHZ)-1),'r')
@@ -147,8 +147,8 @@ elseif style == 4
     if ~exist(directory,'dir')
         mkdir(directory)
     end
-    filename = sprintf('3comp_xcorr_%d_%dsamples_%1.1f_%s.png',orid,numel(needle.HHZ),cutoff_val,stationz);
-    filename_wPath = fullfile(directory,filename);
-    hgexport(h, filename_wPath, hgexport('factorystyle'), 'Format', 'png');
+    %filename = sprintf('3comp_xcorr_%d_%dsamples_%1.1f_%s.png',orid,numel(needle.HHZ),cutoff_val,stationz);
+    %filename_wPath = fullfile(directory,filename);
+    %hgexport(h, filename_wPath, hgexport('factorystyle'), 'Format', 'png');
 end
 end
