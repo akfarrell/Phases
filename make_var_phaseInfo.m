@@ -5,7 +5,7 @@ addpath('/home/a/akfarrell/Uturuncu/Phase/ind_eq_code')
 [oridStruct, allorids] = get_eq_info();
 
 load('good_orids.mat')
-for count = 1:14%numel(good_orids)
+for count = 1:66%numel(good_orids)
     directory = '/home/a/akfarrell/Uturuncu/Phase/wf_objs';
     filename = sprintf('wf_%d.mat',good_orids(count));
     filename_wPath = fullfile(directory,filename);

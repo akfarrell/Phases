@@ -11,7 +11,7 @@ w_topo = 'y'; %Change to be with or without topography
 %% Plotting dist vs time
 p=figure; hold on;
 set(p, 'Position', [1000 1000 1200 1200])
-for count=1:14%numel(good_orids)
+for count=1:66%numel(good_orids)
     stationz = fieldnames(g_oridStruct.(erqs{count}).refl);
     ot = g_oridStruct.(erqs{count}).time_origin(1);
     inds_phase_p = find(strcmp(g_oridStruct.(erqs{count}).phase, 'P'));

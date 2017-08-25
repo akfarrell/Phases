@@ -1,10 +1,11 @@
 %% Loading in inflection point data
 tic
-close all
+%close all
 load('oridStruct.mat')
 load('failz_final.mat')
 load('siteStruct.mat')
 load('good_orids.mat');
+load('conv_phase.mat')
 
 %% Plot 
 p=figure; hold on;
@@ -35,21 +36,17 @@ scatterm(siteStruct.lat,siteStruct.lon,'*','r')
 textm(siteStruct.lat,siteStruct.lon,siteStruct.sta)
 
 %% Plot earthquakes
-eqs_interest = [2062 2068 2070 2075];
-
 for count = 43:58%numel(good_orids)
-    %plotm([oridStruct.(sprintf('eq_%d',good_orids(count))).lat(1) utuLat], [oridStruct.(sprintf('eq_%d',good_orids(count))).lon(1) utuLon])
     scatterm(oridStruct.(sprintf('eq_%d',good_orids(count))).lat(1), oridStruct.(sprintf('eq_%d',good_orids(count))).lon(1), 50,'s','k')
-end
-for count = 1:numel(eqs_interest)
-    inds = find(good_orids==eqs_interest(count));
-    scatterm(oridStruct.(sprintf('eq_%d',good_orids(inds))).lat(1), oridStruct.(sprintf('eq_%d',good_orids(inds))).lon(1), 50,'s','f','r')
+    %plotm([oridStruct.(sprintf('eq_%d',good_orids(count))).lat(1) conv_phase.PLSSlat], [oridStruct.(sprintf('eq_%d',good_orids(count))).lon(1) conv_phase.PLSSlon])
+    plotm([oridStruct.(sprintf('eq_%d',good_orids(count))).lat(1) conv_phase.PLLLlat], [oridStruct.(sprintf('eq_%d',good_orids(count))).lon(1) conv_phase.PLLLlon])
+    textm(oridStruct.(sprintf('eq_%d',good_orids(count))).lat(1), oridStruct.(sprintf('eq_%d',good_orids(count))).lon(1)-0.0025, {count})
 end
 
 %% Saving file
 hold off
 directory = '/home/a/akfarrell/Uturuncu/Phase/examples';
-filename = 'eqs_mapview_map.png';
+filename = 'eqs_mapview_map_PLLL.png';
 filename_wPath = fullfile(directory,filename);
 hgexport(p, filename_wPath, hgexport('factorystyle'), 'Format', 'png');
 

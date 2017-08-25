@@ -36,7 +36,7 @@ hold on
 scatterm(-22.27, -67.18, 100,'^','r')
 
 %% Plotting reflection points
-for count=1:14%numel(good_orids)
+for count=41:66%numel(good_orids)
     stationz = fieldnames(inf_point.(erqs{count}));
     %scatterm(g_oridStruct.(erqs{count}).lat,g_oridStruct.(erqs{count}).lon,100,'d','filled','r')
     for count2 = 1:numel(stationz)

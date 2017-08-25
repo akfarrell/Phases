@@ -5,8 +5,12 @@ load('oridStruct.mat')
 load('failz_final.mat')
 load('siteStruct.mat')
 namez = fieldnames(oridStruct);
-good_orids = zeros(1,1);
-discard_orids = zeros(1,1);
+used_orids = zeros(1,1);
+used_inds = zeros(1,1);
+
+methods = 'circlez';
+ctr = 1998;
+r = 0.05;
 
 %% Plot 
 p=figure; hold on;
@@ -31,23 +35,21 @@ scatterm(siteStruct.lat,siteStruct.lon,'*','r')
 textm(siteStruct.lat,siteStruct.lon,siteStruct.sta)
 
 %% Define outer polygon to see if eq's in network or not
-stnz = {'PLHS','PLCL','PL03','PLTP','PLRR','PLWB','PL07','PLAR','PLSP','PLAN','PLCO','PLSQ','PLRV','PLLC','PLJR','PLLB','PLHS'};
-for hurr = 1:numel(stnz)
-    stnz_inds(hurr) = find(strcmp(siteStruct.sta,stnz{hurr}));
-end
-stn_lon = siteStruct.lon(stnz_inds);
-stn_lat = siteStruct.lat(stnz_inds);
-plotm(stn_lat,stn_lon);
+th = 0:pi/50:2*pi;
+xunit = r*cos(th)+oridStruct.(sprintf('eq_%d',ctr)).lat(1);
+yunit = r*sin(th)+oridStruct.(sprintf('eq_%d',ctr)).lon(1);
+plotm(xunit,yunit)
+
 %%
 for count = 1:numel(namez)
     name_val = str2double(strrep(namez{count},'eq_',''));
     if any(name_val==failz)
     else
-        if inpolygon(oridStruct.(namez{count}).lon(1),oridStruct.(namez{count}).lat(1),stn_lon,stn_lat)
-            good_orids(numel(good_orids)+1) = name_val; %indexing is at +1
+        if inpolygon(oridStruct.(namez{count}).lon(1),oridStruct.(namez{count}).lat(1),yunit,xunit)
+            used_orids(numel(used_orids)+1) = name_val; %indexing is at +1
             scatterm(oridStruct.(namez{count}).lat(1), oridStruct.(namez{count}).lon(1), 50,'o','k')
+            used_inds(numel(used_inds)+1) = find(name_val==good_orids);
         else
-            discard_orids(numel(discard_orids)+1) = name_val;
             scatterm(oridStruct.(namez{count}).lat(1), oridStruct.(namez{count}).lon(1), 50,'o','c')
         end
     end
@@ -55,17 +57,14 @@ end
 
 %% Saving file
 hold off
-directory = '/home/a/akfarrell/Uturuncu/Phase/';
-filename = 'ALLeqs_used_map.png';
+directory = '/home/a/akfarrell/Uturuncu/Phase/eqs_used';
+filename = sprintf('eqs_used_map_%d_%1.3f.png',ctr,r);
 filename_wPath = fullfile(directory,filename);
 hgexport(p, filename_wPath, hgexport('factorystyle'), 'Format', 'png');
 
 %% Refine which orids are used and make text file of discard orids
-good_orids = good_orids(2:end);
-discard_orids = discard_orids(2:end);
-save('good_orids.mat','good_orids')
-save('discard_orids.mat','discard_orids')
-fileID = fopen('discard_orids.txt','w');
-fprintf(fileID,'%d\n',discard_orids);
-fclose(fileID);
+used_orids = used_orids(2:end);
+used_inds = used_inds(2:end);
+save('/home/a/akfarrell/Uturuncu/Phase/eqs_used/used_orids.mat','used_orids')
+save('/home/a/akfarrell/Uturuncu/Phase/eqs_used/used_inds.mat','used_inds')
 toc

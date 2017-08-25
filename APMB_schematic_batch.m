@@ -4,8 +4,9 @@ load('topo_data.mat');
 [lon, lat] = meshgrid(topo_data.lon, topo_data.lat);
 topo_data.z = double(topo_data.z)./1000;
 close
+load('oridStruct.mat')
 load('good_orids.mat')
-for count = 1:14%numel(good_orids)
+for count = 1:66%numel(good_orids)
     eq = good_orids(count);
     OrS = sprintf('eq_%d',good_orids(count));
     OrS
@@ -70,7 +71,7 @@ for count = 1:14%numel(good_orids)
             if strfind(result, 'Source is in layer 3') %Might need to change if velmodel is changed
                 inf_dist = travel_times(1);
             else
-                inf_val = find(valz>=strfind(result, 'twice'),1)-2; %REVISEEEE!!!
+                inf_val = find(valz>=max(strfind(result, 'twice')),1)-2; %REVISEEEE!!!
                 inf_dist = sum(travel_times(1:inf_val-1))+travel_times(inf_val)/2;
             end
             inf_point.(OrS).(site).infl = [inf_dist mean(azimuth_vals(2:end))]; %distance AND azimuth
