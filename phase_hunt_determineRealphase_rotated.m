@@ -15,7 +15,9 @@ load('siteStruct.mat');
 %stylie = 'min'; %%%%% CHANGE!!!---------0----min,max,abz
 stylie = {'max','min'};
 
-ch = {'HHE','HHN','HHZ'};
+%ch = {'HHE','HHN','HHZ'};
+ch2 = {'HHZ','HHN','HHE'};
+ch = {'HHZ','HHR','HHT'};
 cutoff_val = 0.6;
 S_pad = 25;
 SECSPERDAY = 60 * 60 * 24;
@@ -52,8 +54,6 @@ directory2 = sprintf('/home/a/akfarrell/Uturuncu/Phase/corrs/%d',allorids(count)
 filename_wPath2 = fullfile(directory2,fname);
 load(filename_wPath2)
 c_orig=c;
-c_total = c.(ch{1})+c.(ch{2})+c.(ch{3});
-c_abs_total = abs(c.(ch{1}))+abs(c.(ch{2}))+abs(c.(ch{3}));
 %P_pad = 15
 dnum = zeros(1,numel(get(w_clean(count2),'data')));
 dnum(1) = datenum(get(w_clean(count2),'start'));
@@ -72,13 +72,40 @@ try
 catch
     w_clean_e = extract(w_clean,'TIME',starttime);
 end
-for count3 = 1:numel(ch)
-    
-    Haystack_data.(ch{count3}) = get(w_clean(count2+count3-1),'data');
+%%
+for count3 = 1:numel(ch2)
     W(1,3-count3+1) = w_clean_e(count2+count3-1);
+    W_all(1,3-count3+1) = w_clean(count2+count3-1);
+end
+clear count3
+%% rotate waveforms
+TC=threecomp(W_all,az);
+TCR = TC.rotate();
+TCRW = TCR.waveform();
+TCRP = TCR.particlemotion();
+%TCRP.plot2()
+
+for count3 = 1:numel(ch)
+    Haystack_data.(ch{count3}) = get(TCRW(count3),'data');
+    get(TCRW(count3),'channel')
     needle.(ch{count3}) = Haystack_data.(ch{count3})(P_ind:P_ind+num_samps-1);
+
     %%
-    c_t.(ch{count3}) = c_total;
+    lngX = length(Haystack_data.(ch{count3}));
+    lngY = length(needle.(ch{count3}));
+    assert(lngX >= lngY);
+    lags = 0:(lngX-lngY);
+    %%
+    for valz = lags
+        c.(ch{count3})(valz+1) = xcorr(Haystack_data.(ch{count3})(valz+1:valz+lngY) -...
+            mean(Haystack_data.(ch{count3})(valz+1:valz+lngY)), needle.(ch{count3}) - mean(needle.(ch{count3})),0,'coeff');
+    end
+end
+%%
+clear count3
+c_total = c.(ch{1})+c.(ch{2})+c.(ch{3});
+c_abs_total = abs(c.(ch{1}))+abs(c.(ch{2}))+abs(c.(ch{3}));
+for count3 = 1:numel(ch)
     c_a_t.(ch{count3}) = c_abs_total;
     for durr = 1:numel(stylie)
         if strcmp(stylie{durr},'max')
@@ -111,9 +138,11 @@ for count3 = 1:numel(ch)
         
     end
 end
+plot_xcorrs(lags, ch, Haystack_data, needle, c, stationz{count2}, cutoff_val, i2, allorids(count), 4,P_ind+P_pad,S_ind-S_pad)
+
 
 %% Check and plot directionality and polarity of waveforms
-dtac = [Haystack_data.HHZ'; Haystack_data.HHE'; Haystack_data.HHN'];
+dtac = [Haystack_data.HHZ'; Haystack_data.HHT'; Haystack_data.HHR'];
 wndo = 20;%14;%31;
 [azim, incd, ellip] = polar_coherency(dtac, wndo);
 [azim_cov, incd_cov, ellip_cov] = polar_covariance(dtac, wndo);
@@ -147,7 +176,7 @@ for countz = 1:numel(ch)
     hold on
     subplot(1,6,countz*2)
     spectrogram(Haystack_data.(ch{countz}),20,19,128,100) %make sure this is same as below
-    s.(ch{countz})=spectrogram(Haystack_data.(ch{countz}),20,19,128,100); %make sure this is same as above
+    [s.(ch{countz}),F.(ch{countz}), T.(ch{countz}), P.(ch{countz})]=spectrogram(Haystack_data.(ch{countz}),20,19,128,100); %make sure this is same as above
     if S_ind + 300 > numel(Haystack_data.(ch{countz}))
         ylim([(P_ind-300)/100, S_ind/100])
     else
@@ -173,13 +202,13 @@ g = figure();
 set(g, 'Position', [1000 1000 1400 1200])
 for countzs = 1:numel(ch)
     subplot(6,1,countzs*2-1)
-    plot(abs(s.(ch{countzs})(1,:)),'k'); grid on;
+    plot(nanmax(abs(s.(ch{countzs})(12:30,:))),'k'); grid on;
     if S_ind + 300 > numel(Haystack_data.(ch{countzs}))
         xlim([P_ind-300, S_ind])
     else
         xlim([P_ind-300, S_ind+300])
     end
-    ylim([0, max(abs(s.(ch{countzs})(1,:)))])
+    ylim([0, max(nanmax(abs(s.(ch{countzs})(12:30,:))))])
     line([iatmax.(ch{countzs}), iatmax.(ch{countzs})],[0, max(abs(s.(ch{countzs})(1,:)))],'Color','y','LineStyle',':','LineWidth',2)
     line([itmax.(ch{countzs}), itmax.(ch{countzs})],[0, max(abs(s.(ch{countzs})(1,:)))],'Color','r','LineStyle',':','LineWidth',2)
     line([itmin.(ch{countzs}), itmin.(ch{countzs})],[0, max(abs(s.(ch{countzs})(1,:)))],'Color','g','LineStyle',':','LineWidth',2)
@@ -236,10 +265,7 @@ hold off
 % hold off
 
 %% Check and plot the above, but with GISMO
-TC=threecomp(W,az);
-TCR = TC.rotate();
-TCRP = TCR.particlemotion();
-TCRP.plot2()
+
 
 %%
 toc
