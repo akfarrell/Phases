@@ -4,10 +4,8 @@ function pk_vals = det_pks(signals,frequencies,min_freq,type)
 % signal for periodogram needs no manipulation
 
 %% Determine peaks for stft
-    if strcmp(type, 'STFT')
+    if strcmp(type, 'STFT') || strcmp(type, 'Spectrogram')
         signals = mean(signals,2);
-        
-        
     end
     
     [PKS,LOCS] = findpeaks(signals);

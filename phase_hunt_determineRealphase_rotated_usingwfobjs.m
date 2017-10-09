@@ -1,4 +1,4 @@
-% function high_corrs = phase_hunt_changingNeedle_mins(allorids,oridStruct,P,fil,cutoff_val)
+% function high_corrs = phase_hunt_changingNeedle_mins(good_orids,oridStruct,P,fil,cutoff_val)
 % find(strcmp(fieldnames(oridStruct),'eq_whatever')) %to find eq
 %orid2166 is origin 203
 %orid2034 is origin 128
@@ -6,11 +6,12 @@
 tic
 addpath('/raid/home/a/akfarrell/')
 addpath('/raid/home/a/akfarrell/Uturuncu')
-%clear;
+addpath('/home/a/akfarrell/Polarizemic-master/functions/')
+clear;
 clc;
 fil=[2 25];
 %fil=[10 20];
-[oridStruct, allorids] = get_eq_info(); 
+%[oridStruct, good_orids] = get_eq_info(); 
 load('siteStruct.mat');
 %stylie = 'min'; %%%%% CHANGE!!!---------0----min,max,abz
 stylie = {'max','min'};
@@ -23,22 +24,24 @@ S_pad = 25;
 SECSPERDAY = 60 * 60 * 24;
 num_samps = 31;
 %close all
-
+load('good_orids.mat')
+load('oridStruct.mat')
 eq = 2066;
+load(sprintf('wf_objs/wf_%d.mat',eq))
 stasz = 'PLLL';
 val_try = 499;%
 
 %%
-count=find(allorids == eq);
+count=find(good_orids == eq);
 %close all
 % directory = '/home/a/akfarrell/Uturuncu/Phase/wf_objs';
-% filename = sprintf('wf_%d.mat',allorids(count));
+% filename = sprintf('wf_%d.mat',good_orids(count));
 % filename_wPath = fullfile(directory,filename);
 % if exist(filename_wPath,'file')
 %     load(filename_wPath)
 % else
 %     create and clean waveform object
-%     [w_raw,OrS,stations_inEq] = get_wf(allorids(count),oridStruct);
+%     [w_raw,OrS,stations_inEq] = get_wf(good_orids(count),oridStruct);
 %     w_clean = waveform_clean(w_raw, filterobject('b', fil, 2));
 %     save(filename_wPath,'w_clean', 'OrS', 'stations_inEq');
 % end
@@ -48,9 +51,9 @@ stationz = get(w_clean,'station');
 count2 = min(find(strcmp(stasz,stationz)));%:3:numel(w_clean) %43-45 is PLMN 43:3:43
 %HHE = count, HHN = count+1, HHZ = count+2
 
-fname = sprintf('corr_%d_%s_%s.mat',allorids(count),stationz{count2},stylie{1});
+fname = sprintf('corr_%d_%s_%s.mat',good_orids(count),stationz{count2},stylie{1});
 directory = '/home/a/akfarrell/Uturuncu/Phase/wf_objs';
-directory2 = sprintf('/home/a/akfarrell/Uturuncu/Phase/corrs/%d',allorids(count));
+directory2 = sprintf('/home/a/akfarrell/Uturuncu/Phase/corrs/%d',good_orids(count));
 filename_wPath2 = fullfile(directory2,fname);
 load(filename_wPath2)
 c_orig=c;
@@ -138,7 +141,7 @@ for count3 = 1:numel(ch)
         
     end
 end
-plot_xcorrs(lags, ch, Haystack_data, needle, c, stationz{count2}, cutoff_val, i2, allorids(count), 4,P_ind+P_pad,S_ind-S_pad)
+plot_xcorrs(lags, ch, Haystack_data, needle, c, stationz{count2}, cutoff_val, i2, good_orids(count), 4,P_ind+P_pad,S_ind-S_pad)
 
 
 %% Check and plot directionality and polarity of waveforms
@@ -151,11 +154,11 @@ phase_plots(Haystack_data,P_ind, S_ind, azim,incd,ellip,eq,stasz)
 
 %%
 
-% plot_xcorrs(lags, ch, Haystack_data, needle, c, stationz{count2}, cutoff_val, i2, allorids(count), 4,P_ind+P_pad,S_ind-S_pad)
-% plot_xcorrs(lags, ch, Haystack_data, needle, c_t, stationz{count2}, cutoff_val*3, itmin, allorids(count), 4,P_ind+P_pad,S_ind-S_pad)
-% plot_xcorrs(lags, ch, Haystack_data, needle, c_t, stationz{count2}, cutoff_val*3, itmax, allorids(count), 4,P_ind+P_pad,S_ind-S_pad)
+% plot_xcorrs(lags, ch, Haystack_data, needle, c, stationz{count2}, cutoff_val, i2, good_orids(count), 4,P_ind+P_pad,S_ind-S_pad)
+% plot_xcorrs(lags, ch, Haystack_data, needle, c_t, stationz{count2}, cutoff_val*3, itmin, good_orids(count), 4,P_ind+P_pad,S_ind-S_pad)
+% plot_xcorrs(lags, ch, Haystack_data, needle, c_t, stationz{count2}, cutoff_val*3, itmax, good_orids(count), 4,P_ind+P_pad,S_ind-S_pad)
 % if exist('iatmax','var')
-%     plot_xcorrs(lags, ch, Haystack_data, needle, c_a_t, stationz{count2}, cutoff_val*3, iatmax, allorids(count), 4,P_ind+P_pad,S_ind-S_pad)
+%     plot_xcorrs(lags, ch, Haystack_data, needle, c_a_t, stationz{count2}, cutoff_val*3, iatmax, good_orids(count), 4,P_ind+P_pad,S_ind-S_pad)
 % end
 
 h = figure();
