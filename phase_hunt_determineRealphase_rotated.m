@@ -6,6 +6,7 @@
 tic
 addpath('/raid/home/a/akfarrell/')
 addpath('/raid/home/a/akfarrell/Uturuncu')
+addpath('/raid/home/a/akfarrell/Polarizemic-master/functions/')
 %clear;
 clc;
 fil=[2 25];
@@ -30,18 +31,18 @@ val_try = 499;%
 
 %%
 count=find(allorids == eq);
-%close all
-% directory = '/home/a/akfarrell/Uturuncu/Phase/wf_objs';
-% filename = sprintf('wf_%d.mat',allorids(count));
-% filename_wPath = fullfile(directory,filename);
-% if exist(filename_wPath,'file')
-%     load(filename_wPath)
-% else
-%     create and clean waveform object
-%     [w_raw,OrS,stations_inEq] = get_wf(allorids(count),oridStruct);
-%     w_clean = waveform_clean(w_raw, filterobject('b', fil, 2));
-%     save(filename_wPath,'w_clean', 'OrS', 'stations_inEq');
-% end
+close all
+directory = '/home/a/akfarrell/Uturuncu/Phase/wf_objs';
+filename = sprintf('wf_%d.mat',allorids(count));
+filename_wPath = fullfile(directory,filename);
+if exist(filename_wPath,'file')
+   load(filename_wPath)
+else
+    %create and clean waveform object
+    [w_raw,OrS,stations_inEq] = get_wf(allorids(count),oridStruct);
+    w_clean = waveform_clean(w_raw, filterobject('b', fil, 2));
+    save(filename_wPath,'w_clean', 'OrS', 'stations_inEq');
+end
 stationz = get(w_clean,'station');
 
 %%
@@ -269,5 +270,4 @@ hold off
 
 %%
 toc
-
 %end
