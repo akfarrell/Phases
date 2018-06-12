@@ -4,6 +4,7 @@
 %orid2034 is origin 128
 %orid2277 is origin 277
 tic
+addpath(genpath('/home/a/akfarrell/Uturuncu/Phase'))
 addpath('/raid/home/a/akfarrell/')
 addpath('/raid/home/a/akfarrell/Uturuncu')
 addpath('/raid/home/a/akfarrell/Polarizemic-master/functions/')
@@ -15,7 +16,7 @@ clear all; close all; clc;
 load('siteStruct.mat');
 %stylie = 'min'; %%%%% CHANGE!!!---------0----min,max,abz
 stylie = {'max','min'};
-
+warning('off')
 %ch = {'HHE','HHN','HHZ'};
 ch = {'HHZ','HHN','HHE'};
 ch2 = {'HHZ','HHR','HHT'};
@@ -27,12 +28,13 @@ num_samps = 31;
 % eq = 2066;
 % stasz = 'PLLL';
 eq = 2166;
-stasz = 'PLMK';
+stasz = 'PLMD';
 Pvel = 4.2; %km/s
 Svel = 2.35; %km/s
-%val_try = 569; % If commented out, find val_try (is P_ind or S_ind)
+%val_try = 569; % If commented out, find val_try (is P_ind or S_ind) ~line
+%110
 
-%%
+
 count=find(allorids == eq);
 directory = '/home/a/akfarrell/Uturuncu/Phase/wf_objs';
 filename = sprintf('wf_%d.mat',allorids(count));
@@ -48,7 +50,7 @@ filename_wPath = fullfile(directory,filename);
 %end
 stationz = get(w_clean,'station');
 
-%%
+
 count2 = min(find(strcmp(stasz,stationz)));%:3:numel(w_clean) %43-45 is PLMN 43:3:43
 %HHE = count, HHN = count+1, HHZ = count+2
 
@@ -75,7 +77,7 @@ end
 try
     S_ind = find(dnum>=time_Sarr, 1,'first');
 catch
-    S_ind = numel(get(w_clean(1),'data'))-numel(needle.(ch{count3}));
+    S_ind = numel(get(w_clean(1),'data'))-num_samps;
 end
 
 % fname = sprintf('corr_%d_%s_%s.mat',allorids(count),stationz{count2},stylie{1});
@@ -86,7 +88,7 @@ end
 % c_orig=c;
 %P_pad = 15
 
-%%
+
 numz = find(strcmp(siteStruct.sta,stasz));
 % find azimuth, distance, and incidence angle
 az = azimuth(siteStruct.lat(numz), siteStruct.lon(numz),oridStruct.(sprintf('eq_%d',eq)).lat(1),oridStruct.(sprintf('eq_%d',eq)).lon(1));
@@ -95,9 +97,28 @@ starttime = oridStruct.(sprintf('eq_%d',eq)).time_phase(intersect(find(strcmp(or
 dist = distance(siteStruct.lat(numz), siteStruct.lon(numz),oridStruct.(sprintf('eq_%d',eq)).lat(1),oridStruct.(sprintf('eq_%d',eq)).lon(1))*111.12;
 inc = atand((siteStruct.elev(numz)+oridStruct.(sprintf('eq_%d',eq)).depth(1))/dist);
 
-val_try = P_ind;
+az2 = az;
+if az > 180
+    az = az-180;
+else
+    az = az+180;
+end
+load('phaseStruct_backup/pS1.mat')
+phase_times = phaseStruct.eq_2166.(stasz);
+ph_indz = zeros(size(phase_times));
+for cnt = 1:numel(phase_times)
+    ph_indz(cnt) = find(dnum>=phase_times(cnt), 1,'first');
+end
+% val_try = P_ind; indie = 1;
+% val_try = S_ind; indie = 4; %CHANGE!!!!
+try
+    vee = 1;
+    val_try = ph_indz(vee);
+    indie = vee+1;
+catch
+end
 endtime = P_ind+ceil((dist/Svel-dist/Pvel)*100)+100;
-%% Find best filter using periodogram and filter to that
+% Find best filter using periodogram and filter to that
 fs = get(w_clean(count2),'freq');
 w_clean_copy = w_clean;
 w_clean_copy = w_clean_copy(count2:count2+2);
@@ -121,7 +142,12 @@ for countz = 1:numel(data)
     clear max_p
     
     % TRY THIS WITH DETERMINE PEAKS OF BOTH!!!!!
-    [k.(compnt{countz}),w.(compnt{countz})] = det_pks(pdgrm.(compnt{countz}),f_pdgrm.(compnt{countz}),3,'pdgrm')
+    try
+        [k.(compnt{countz}),w.(compnt{countz})] = det_pks(pdgrm.(compnt{countz}),f_pdgrm.(compnt{countz}),3,'pdgrm','low-freq')
+    catch
+        [k.(compnt{countz}),w.(compnt{countz})] = det_pks(pdgrm.(compnt{countz}),f_pdgrm.(compnt{countz}),3,'pdgrm')
+        disp('NOT LOW-FREQ')
+    end
     %[k1.(compnt{countz}),w1.(compnt{countz})] = det_pks(pdgrm1.(compnt{countz}),f_pdgrm1.(compnt{countz}),3,'pdgrm')
     %w1.(compnt{countz})=w1.(compnt{countz})/2;
     w.(compnt{countz})=w.(compnt{countz})/2;
@@ -129,17 +155,17 @@ for countz = 1:numel(data)
     %errorz1.(compnt{countz}) = [k1.(compnt{countz})+w1.(compnt{countz}),k1.(compnt{countz})-w1.(compnt{countz})];
     
 end
-%% Determine peak frequency of normalized, composite spectra
+% Determine peak frequency of normalized, composite spectra
 
 pdgrm_tot = pdgrm_norm.HHZ+pdgrm_norm.HHE+pdgrm_norm.HHN;
-[pk_tot,w_tot] = det_pks(pdgrm_tot,f_pdgrm.HHZ,3,'pdgrm')
+[pk_tot,w_tot] = det_pks(pdgrm_tot,f_pdgrm.HHZ,3,'pdgrm','low-freq')
 
 %% Check into values for best fitting frequencies and see how they compare to waveforms
-intersect_vals = RangesIntersect(errorz(1,:), errorz(2,:), errorz(3,:))
+intersect_vals = RangesIntersect(errorz(1,:), errorz(2,:), errorz(3,:));
 a = linspace(errorz(1,1),errorz(1,2),50);
 b = linspace(errorz(2,1),errorz(2,2),50);
 c = linspace(errorz(3,1),errorz(3,2),50);
-d = mean(horzcat(a,b,c))
+d = mean(horzcat(a,b,c));
 
 %make sine waves of frequency picked up by det_pks
 sig_len = numel(sig_data.HHZ);
@@ -195,12 +221,16 @@ wndo = 20;%30;%20;%14;%31;
 TC=threecomp(W_all,az);
 %TCR = TC.rotate();
 TCW = TC.waveform();
-TCP = TC.particlemotion(0.01,wndo/100);
+[TCP,vals,vecs] = TC.particlemotion(0.01,wndo/100);
+[lambda, I]=sort(vals,1,'descend');
+X = vecs(:,I(1),:); %get greatest eigenvector
+
+
 
 TC_unfilt = threecomp(W_all_unfilt,az);
 %TCR_unfilt = TC_unfilt.rotate();
 TCW_unfilt = TC_unfilt.waveform();
-TCP_unfilt = TC_unfilt.particlemotion(0.01,wndo/100);
+[TCP_unfilt, vals_unfilt, vecs_unfilt] = TC_unfilt.particlemotion(0.01,wndo/100);
 
 
 for count3 = 1:numel(ch)
@@ -236,11 +266,37 @@ for cz = 1:numel(azim)
 %         incd(cz)=90-(incd(cz)-90);
 %     end
 end
+
+%% make phase plot data range from 240-500, then plot 
 %[azim_cov, incd_cov, ellip_cov] = polar_covariance(dtac, wndo);
-phase_plots(Haystack_data_unfilt,P_ind, S_ind, azim,incd,ellip,eq,stasz,val_try,endtime,az,inc)
-phase_plots(Haystack_data,P_ind, S_ind, azim,incd,ellip,eq,stasz,val_try,endtime,az,inc)
-%phase_plots(Haystack_data,P_ind, S_ind, azim_cov,incd_cov,ellip_cov,eq,stasz,val_try,endtime)
-%phase_plots(Haystack_data_unfilt,P_ind, S_ind, azim_u,incd_u,ellip_u,eq,stasz,val_try,endtime,az,inc)
+
+min_num = 240;
+if az < min_num
+    az_adj = az+360;
+else
+    az_adj = az;
+end
+
+azim_adj = zeros(size(azim));
+for ct = 1:numel(azim)
+    if azim(ct) < min_num
+        azim_adj(ct) = azim(ct)+360;
+    else
+        azim_adj(ct) = azim(ct);
+    end
+end
+
+
+%% Get phase information if availabe
+%load('phaseStruct.mat');
+
+% try
+%     phase_plots(Haystack_data_unfilt,P_ind, S_ind, azim_adj,incd,ellip,eq,stasz,val_try,endtime,az_adj,inc,ph_indz)
+%     phase_plots(Haystack_data,P_ind, S_ind, azim_adj,incd,ellip,eq,stasz,val_try,endtime,az_adj,inc,ph_indz)
+% catch
+%     phase_plots(Haystack_data_unfilt,P_ind, S_ind, azim_adj,incd,ellip,eq,stasz,val_try,endtime,az_adj,inc)
+%     phase_plots(Haystack_data,P_ind, S_ind, azim_adj,incd,ellip,eq,stasz,val_try,endtime,az_adj,inc)
+% end
 
 %% Plot rectilinearity, planarity, azimuth, energy, and inclination
 tcrp_az = get(TCP,'azimuth');
@@ -255,10 +311,56 @@ tcrp_rec_u = get(TCP_unfilt,'rectilinearity');
 tcrp_plan_u = get(TCP_unfilt,'planarity');
 tcrp_en_u = get(TCP_unfilt,'energy');
 %phase_plots(Haystack_data, P_ind, S_ind, get(tcrp_az,'data'),get(tcrp_inc,'data'),get(tcrp_rec,'data'),eq,stasz);
+
+%% Plots using 0-360 for azimuth
+% plot_threecomp_directionality(endtime,val_try,Haystack_data_unfilt,P_ind,S_ind,tcrp_az,tcrp_inc, tcrp_rec, tcrp_plan, tcrp_en,az,inc)
+% plot_threecomp_directionality(endtime,val_try,Haystack_data,P_ind,S_ind,tcrp_az,tcrp_inc, tcrp_rec, tcrp_plan, tcrp_en,az,inc)
+%% Plots using 240-500 for azimuth
+tcrp_az_data = get(tcrp_az,'data');
+tcrp_az_data_adj = zeros(size(tcrp_az_data));
+for ct = 1:numel(tcrp_az_data)
+    if tcrp_az_data(ct) < min_num
+        tcrp_az_data_adj(ct) = tcrp_az_data(ct)+360;
+    else
+        tcrp_az_data_adj(ct) = tcrp_az_data(ct);
+    end
+end
+
+% try
+%With phase arrivals in red
+plot_threecomp_directionality(endtime,val_try,Haystack_data_unfilt,P_ind,...
+    S_ind,tcrp_az,tcrp_inc, tcrp_rec, tcrp_plan, tcrp_en,az_adj,inc,tcrp_az_data_adj,ph_indz)
+plot_threecomp_directionality(endtime,val_try,Haystack_data,P_ind,S_ind,...
+    tcrp_az,tcrp_inc, tcrp_rec, tcrp_plan, tcrp_en,az_adj,inc,tcrp_az_data_adj,ph_indz)
+
 %%
-plot_threecomp_directionality(endtime,val_try,Haystack_data_unfilt,P_ind,S_ind,tcrp_az,tcrp_inc, tcrp_rec, tcrp_plan, tcrp_en,az,inc)
-%%
-plot_threecomp_directionality(endtime,val_try,Haystack_data,P_ind,S_ind,tcrp_az,tcrp_inc, tcrp_rec, tcrp_plan, tcrp_en,az,inc)
+rec_vals = get(tcrp_rec,'data');
+plan_vals = get(tcrp_plan,'data');
+[valrec,indrec] = max(rec_vals(val_try:val_try+num_samps));
+if plan_vals(indrec+val_try-1)<0.5
+    disp('Low degree of planarity!!')
+end
+tcrp_inc_data = get(tcrp_inc,'data');
+
+az_calc = tcrp_az_data_adj(indrec+val_try-1)
+inc_calc = tcrp_inc_data(indrec+val_try-1)
+clear phaseStruct
+load('phaseStruct.mat')
+phaseStruct.(sprintf('eq_%d',eq)).(stasz).az_W_calc(indie) = az_calc;
+phaseStruct.(sprintf('eq_%d',eq)).(stasz).inc_W_calc(indie) = inc_calc;
+phaseStruct.(sprintf('eq_%d',eq)).(stasz).ind_calc(indie) = indrec+val_try-1;
+phaseStruct.(sprintf('eq_%d',eq)).(stasz).rec_W_calc(indie) = valrec;
+phaseStruct.(sprintf('eq_%d',eq)).(stasz).plan_W_calc(indie) = plan_vals(indrec+val_try-1);
+save('phaseStruct.mat','phaseStruct')
+
+
+% catch
+%     plot_threecomp_directionality(endtime,val_try,Haystack_data_unfilt,P_ind,...
+%         S_ind,tcrp_az,tcrp_inc, tcrp_rec, tcrp_plan, tcrp_en,az_adj,inc,tcrp_az_data_adj)
+%     plot_threecomp_directionality(endtime,val_try,Haystack_data,P_ind,S_ind,...
+%         tcrp_az,tcrp_inc, tcrp_rec, tcrp_plan, tcrp_en,az_adj,inc,tcrp_az_data_adj)
+% end
+    
 %%
 %plot_threecomp_directionality(endtime,val_try,Haystack_data_unfilt,P_ind,S_ind,tcrp_az_u,tcrp_inc_u, tcrp_rec_u, tcrp_plan_u, tcrp_en_u,az,inc)
 % %% Plot record section
@@ -278,6 +380,87 @@ plot_threecomp_directionality(endtime,val_try,Haystack_data,P_ind,S_ind,tcrp_az,
 % plotw_rs_test(w_prep_N)
 % plotw_rs_test(w_prep_Z)
 
+% %% Plot az, inc, and polarity/ellipticity together on same plot
+% figure()
+% pad = 100;
+% subplot(2,1,1)
+% plot(tcrp_az_data_adj,'r')
+% hold on
+% plot(azim_adj,'b')
+% title('Azimuth (degrees clockwise from North)')
+% line([0 numel(tcrp_az_data_adj)],[az_adj az_adj],'Color','g','LineStyle',':','LineWidth',1)
+% if S_ind > endtime
+%     xlim([P_ind-pad, xmax])
+% else
+%     xlim([P_ind-pad, S_ind+pad])
+% end
+% ylim([min(min(tcrp_az_data_adj,azim_adj')), max(max(tcrp_az_data_adj,azim_adj'))])
+% line([P_ind P_ind], [min(min(tcrp_az_data_adj,azim_adj')), max(max(tcrp_az_data_adj,azim_adj'))],...
+%         'Color','m','LineStyle',':','LineWidth',2)
+% try
+%     line([S_ind S_ind], [min(min(tcrp_az_data_adj,azim_adj')), max(max(tcrp_az_data_adj,azim_adj'))],...
+%         'Color','m','LineStyle',':','LineWidth',2)
+% catch
+% end
+% 
+% subplot(2,1,2)
+% plot(get(tcrp_inc,'data'),'r')
+% hold on
+% plot(incd,'b')
+% tcrp_inc_data = get(tcrp_inc,'data');
+% title('Incidence Angle (degrees from vertical)')
+% line([0 numel(tcrp_inc_data)],[inc inc],'Color','g','LineStyle',':','LineWidth',1)
+% if S_ind > endtime
+%     xlim([P_ind-pad, xmax])
+% else
+%     xlim([P_ind-pad, S_ind+pad])
+% end
+% ylim([min(min(tcrp_inc_data,incd')), max(max(tcrp_inc_data,incd'))])
+% line([P_ind P_ind], [min(min(tcrp_inc_data,incd')), max(max(tcrp_inc_data,incd'))],...
+%         'Color','m','LineStyle',':','LineWidth',2)
+% try
+%     line([S_ind S_ind], [min(min(tcrp_inc_data,incd')), max(max(tcrp_inc_data,incd'))],...
+%         'Color','m','LineStyle',':','LineWidth',2)
+% catch
+% end
+% 
+% %% Plot all 3 parts of particle motion on same plot
+% figure()
+% pad = 100;
+% 
+% %plot(tcrp_az_data_adj,'r')
+% tcrp_plan_data = get(tcrp_plan,'data');
+% plot(tcrp_plan_data*100,'b')
+% hold on
+% [hAx,hLine1,hLine2] = plotyy(1:numel(tcrp_az_data_adj),tcrp_az_data_adj,1:numel(tcrp_inc_data),tcrp_inc_data);
+% 
+% % plot(tcrp_inc_data,'g')
+% % 
+% 
+% set(hLine1,'Color','r')
+% set(hLine2,'Color','g')
+% legend('Plan','Az','Inc','Location','Best')
+% set(hAx(1),'Ylim',[min(min(tcrp_az_data_adj,tcrp_plan_data*100)),max(max(tcrp_az_data_adj,tcrp_plan_data*100))])
+% set(hAx(2),'Ylim',[min(tcrp_inc_data),max(tcrp_inc_data)])
+% line([0 numel(tcrp_az_data_adj)],[az_adj az_adj],'Color','r','LineStyle',':','LineWidth',1)
+% if S_ind > endtime
+%     set(hAx(2),'Xlim', [P_ind-pad, xmax]);
+%     xlim([P_ind-pad, xmax])
+% else
+%     set(hAx(2),'Xlim', [P_ind-pad, S_ind+pad]);
+%     xlim([P_ind-pad, S_ind+pad])
+% end
+% 
+% line([P_ind P_ind], [min(tcrp_plan_data), max(tcrp_az_data_adj)],...
+%         'Color','m','LineStyle',':','LineWidth',2)
+% try
+%     line([S_ind S_ind], [min(tcrp_plan_data), max(tcrp_az_data_adj)],...
+%         'Color','m','LineStyle',':','LineWidth',2)
+% catch
+% end
+% hold(hAx(2),'on')
+% plot(hAx(2),[0 numel(tcrp_inc_data)],[inc inc],'Color','g','LineStyle',':','LineWidth',1)
+% %legend('Plan','Az','Inc','Location','Best','BF Az','P','S','BF Inc')
 %%
 toc
 %end

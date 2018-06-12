@@ -20,7 +20,7 @@ failz = zeros(1,1);
 clear peaces
 clear stationz
 clear brrt
-for count=311:numel(allorids) %Probably have to do in chunks... 1:200, 201:250,251:310,311:numel(allorids) 
+for count=203%311:numel(allorids) %Probably have to do in chunks... 1:200, 201:250,251:310,311:numel(allorids) 
     close all
     directory = '/home/a/akfarrell/Uturuncu/Phase/wf_objs';
     filename = sprintf('wf_%d.mat',allorids(count));
@@ -46,7 +46,8 @@ for count=311:numel(allorids) %Probably have to do in chunks... 1:200, 201:250,2
         
     else
         %%
-        for count2 = 1:3:numel(w_clean) %43-45 is PLMN 43:3:43
+        for count2 = 1:3:69%1:3:numel(w_clean) %43-45 is PLMN 43:3:43
+            count2
             clear data_sig
             clear inds
             clear lags
@@ -162,9 +163,9 @@ for count=311:numel(allorids) %Probably have to do in chunks... 1:200, 201:250,2
         %             count4 = count4+1;
         %         end
 
-                for counter = 1:numel(inds)
-                    data_sig(counter*numel(needle.HHZ)-numel(needle.HHZ)+1:counter*numel(needle.HHZ)) = inds(counter):inds(counter)+numel(needle.HHZ)-1;
-                end
+%                 for counter = 1:numel(inds)
+%                     data_sig(counter*numel(needle.HHZ)-numel(needle.HHZ)+1:counter*numel(needle.HHZ)) = inds(counter):inds(counter)+numel(needle.HHZ)-1;
+%                 end
         %%
         %         try
             %         plot_xcorrs(lags, ch, Haystack_data, needle, c_total, stationz{count2}, overall_cutoff, data_sig, allorids(count), 3, P_ind,S_ind)

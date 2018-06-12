@@ -6,40 +6,48 @@
 tic
 addpath('/raid/home/a/akfarrell/')
 addpath('/raid/home/a/akfarrell/Uturuncu')
-clear all;
-clc;
-fil=[2 25];
+addpath('/raid/home/a/akfarrell/Polarizemic-master/functions/')
+%clear;
+clear all; close all; clc;
+%fil=[2 25];
 %fil=[10 20];
 [oridStruct, allorids] = get_eq_info(); 
 load('siteStruct.mat');
 %stylie = 'min'; %%%%% CHANGE!!!---------0----min,max,abz
 stylie = {'max','min'};
-
-ch = {'HHE','HHN','HHZ'};
+load('phaseStruct.mat')
+%ch = {'HHE','HHN','HHZ'};
+ch = {'HHZ','HHN','HHE'};
+ch2 = {'HHZ','HHR','HHT'};
 cutoff_val = 0.6;
 S_pad = 25;
 SECSPERDAY = 60 * 60 * 24;
 num_samps = 31;
 %close all
+% eq = 2066;
+% stasz = 'PLLL';
+eq = 2166;
+stasz = 'PLJR';
+Pvel = 4.2; %km/s
+Svel = 2.35; %km/s
+%val_try = 297; % If commented out, find val_try (is P_ind or S_ind)
+val_try = datenum(2011,04,29,19,15,59.686)
 
-eq = 2066;
-stasz = 'PLLL';
-val_try = 499;%
 
 %%
 count=find(allorids == eq);
-%close all
-% directory = '/home/a/akfarrell/Uturuncu/Phase/wf_objs';
-% filename = sprintf('wf_%d.mat',allorids(count));
-% filename_wPath = fullfile(directory,filename);
-% if exist(filename_wPath,'file')
-%     load(filename_wPath)
-% else
-%     create and clean waveform object
+directory = '/home/a/akfarrell/Uturuncu/Phase/wf_objs';
+filename = sprintf('wf_%d.mat',allorids(count));
+filename_wPath = fullfile(directory,filename);
+%if exist(filename_wPath,'file')
+%    load(filename_wPath)
+%else
+    %create and clean waveform object
     [w_raw,OrS,stations_inEq] = get_wf(allorids(count),oridStruct);
-    w_clean = waveform_clean(w_raw, filterobject('b', fil, 2));
-%     save(filename_wPath,'w_clean', 'OrS', 'stations_inEq');
-% end
+    %w_clean_filt = waveform_clean(w_raw, filterobject('b', fil, 2));
+    w_clean = waveform_clean(w_raw);
+    %save(filename_wPath,'w_clean', 'OrS', 'stations_inEq');
+%end
 stationz = get(w_clean,'station');
 
 %%
@@ -51,6 +59,37 @@ directory = '/home/a/akfarrell/Uturuncu/Phase/wf_objs';
 directory2 = sprintf('/home/a/akfarrell/Uturuncu/Phase/corrs/%d',allorids(count));
 filename_wPath2 = fullfile(directory2,fname);
 load(filename_wPath2)
+
+ind_P = intersect(find(strcmp(oridStruct.(OrS).sta,stationz{count2})),find(strcmp(oridStruct.(OrS).phase,'P')));
+time_Parr = oridStruct.(OrS).time_phase(ind_P);
+
+try
+    ind_S = intersect(find(strcmp(oridStruct.(OrS).sta,stationz{count2})),find(strcmp(oridStruct.(OrS).phase,'S')));
+    time_Sarr = oridStruct.(OrS).time_phase(ind_S);
+catch
+    ind_S = numel(get(w_clean(1),'data'));
+end
+dnum = zeros(1,numel(get(w_clean(count2),'data')));
+dnum(1) = datenum(get(w_clean(count2),'start'));
+freq = get(w_clean(count2), 'freq');
+for l = 2:numel(get(w_clean(count2),'data'))
+    dnum(l) = datenum((l/freq)/SECSPERDAY+dnum(1));
+end
+try
+    P_ind = find(dnum>=time_Parr, 1,'first');
+catch
+    P_ind = 0;
+end
+try
+    S_ind = find(dnum>=time_Sarr, 1,'first');
+catch
+    S_ind = numel(get(w_clean(1),'data'))-num_samps;
+end
+
+if val_try >2000
+    val_try = find(dnum>=val_try, 1,'first'); %find index of value to try, if in dnum
+end
+
 c_orig=c;
 c_total = c.(ch{1})+c.(ch{2})+c.(ch{3});
 c_abs_total = abs(c.(ch{1}))+abs(c.(ch{2}))+abs(c.(ch{3}));
@@ -70,7 +109,8 @@ try
         find(strcmp(oridStruct.(sprintf('eq_%d',eq)).sta,stasz))))+datenum(0,0,0,0,0,1);
     w_clean_e = extract(w_clean,'TIME',starttime,endtime);
 catch
-    w_clean_e = extract(w_clean,'TIME',starttime);
+    endtime = dnum(end-num_samps);
+    w_clean_e = extract(w_clean,'TIME',starttime,endtime);
 end
 for count3 = 1:numel(ch)
     
@@ -111,20 +151,22 @@ for count3 = 1:numel(ch)
         
     end
 end
-
-%% Check and plot directionality and polarity of waveforms
-dtac = [Haystack_data.HHZ'; Haystack_data.HHE'; Haystack_data.HHN'];
-wndo = 20;%14;%31;
-[azim, incd, ellip] = polar_coherency(dtac, wndo);
-[azim_cov, incd_cov, ellip_cov] = polar_covariance(dtac, wndo);
-phase_plots(Haystack_data,P_ind, S_ind, azim,incd,ellip,eq,stasz)
+% 
+% %% Check and plot directionality and polarity of waveforms
+% dtac = [Haystack_data.HHZ'; Haystack_data.HHE'; Haystack_data.HHN'];
+% wndo = 20;%14;%31;
+% [azim, incd, ellip] = polar_coherency(dtac, wndo);
+% [azim_cov, incd_cov, ellip_cov] = polar_covariance(dtac, wndo);
+% 
+% 
+% phase_plots(Haystack_data,P_ind, S_ind, azim,incd,ellip,eq,stasz,val_try,xmax, az, inc)
 %phase_plots(Haystack_data,P_ind, S_ind, azim_cov,incd_cov,ellip_cov,eq,stasz)
 
 %%
 
-% plot_xcorrs(lags, ch, Haystack_data, needle, c, stationz{count2}, cutoff_val, i2, allorids(count), 4,P_ind+P_pad,S_ind-S_pad)
-% plot_xcorrs(lags, ch, Haystack_data, needle, c_t, stationz{count2}, cutoff_val*3, itmin, allorids(count), 4,P_ind+P_pad,S_ind-S_pad)
-% plot_xcorrs(lags, ch, Haystack_data, needle, c_t, stationz{count2}, cutoff_val*3, itmax, allorids(count), 4,P_ind+P_pad,S_ind-S_pad)
+plot_xcorrs(lags, ch, Haystack_data, needle, c, stationz{count2}, cutoff_val, i2, allorids(count), 4,P_ind+P_pad,S_ind-S_pad)
+plot_xcorrs(lags, ch, Haystack_data, needle, c_t, stationz{count2}, cutoff_val*3, itmin, allorids(count), 4,P_ind+P_pad,S_ind-S_pad)
+plot_xcorrs(lags, ch, Haystack_data, needle, c_t, stationz{count2}, cutoff_val*3, itmax, allorids(count), 4,P_ind+P_pad,S_ind-S_pad)
 % if exist('iatmax','var')
 %     plot_xcorrs(lags, ch, Haystack_data, needle, c_a_t, stationz{count2}, cutoff_val*3, iatmax, allorids(count), 4,P_ind+P_pad,S_ind-S_pad)
 % end
@@ -236,10 +278,10 @@ hold off
 % hold off
 
 %% Check and plot the above, but with GISMO
-TC=threecomp(W,az);
-TCR = TC.rotate();
-TCRP = TCR.particlemotion();
-TCRP.plot2()
+% TC=threecomp(W,az);
+% TCR = TC.rotate();
+% TCRP = TCR.particlemotion();
+% TCRP.plot2()
 
 %%
 toc
