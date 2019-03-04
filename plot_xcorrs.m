@@ -27,6 +27,7 @@ if style ==1 || style == 2
     plot(indz:indz+numel(needle)-1, Haystack(indz:indz+numel(needle)-1),'r')
     line([P_ind, P_ind],[min(Haystack), max(Haystack)],'Color','m','LineStyle',':','LineWidth',1)
     line([S_ind, S_ind],[min(Haystack), max(Haystack)],'Color','m','LineStyle',':','LineWidth',1)
+%     line([val_try, val_try],[min(Haystack), max(Haystack)],'Color','m','LineStyle',':','LineWidth',1)
     ylim([min(Haystack), max(Haystack)])
 
     subplot(4,1,3)
@@ -41,7 +42,7 @@ if style ==1 || style == 2
     title('Diff Needle and Haystack Maximum Correlation')
     filename = sprintf('xcorr_%d_%s_%dsamples_%1.1f_%s.png',orid,ch,numel(needle),cutoff_val,stationz);
     if style == 1
-        directory = '/home/a/akfarrell/Uturuncu/Phase/xcorr_figs';
+        directory = '/Users/alexandrafarrell/Desktop/akfarrell/Uturuncu/Phase/xcorr_figs';
         filename_wPath = fullfile(directory,filename);
         hgexport(h, filename_wPath, hgexport('factorystyle'), 'Format', 'png');
         if ~exist(directory,'dir')
@@ -50,7 +51,7 @@ if style ==1 || style == 2
     elseif style ==2
         cut_str = num2str(cutoff_val);
         cut_str = strrep(cut_str,'.','pt');
-        directory = sprintf('/home/a/akfarrell/Uturuncu/Phase/xcorr_figs/%d/%s/%s',orid,stationz,cut_str);
+        directory = sprintf('/Users/alexandrafarrell/Desktop/akfarrell/Uturuncu/Phase/xcorr_figs/%d/%s/%s',orid,stationz,cut_str);
         if ~exist(directory,'dir')
             mkdir(directory)
         end
@@ -95,7 +96,7 @@ elseif style == 3
         hold off
     end
 
-    directory = sprintf('/home/a/akfarrell/Uturuncu/Phase/xcorr_figs/total/%d',orid);
+    directory = sprintf('/Users/alexandrafarrell/Desktop/akfarrell/Uturuncu/Phase/xcorr_figs/total/%d',orid);
     if ~exist(directory,'dir')
         mkdir(directory)
     end
@@ -143,10 +144,12 @@ elseif style == 4
         end
     end
     hold off
-    directory = sprintf('/home/a/akfarrell/Uturuncu/Phase/xcorr_figs/total/%d',orid);
+    directory = sprintf('/Users/alexandrafarrell/Desktop/akfarrell/Uturuncu/Phase/xcorr_figs/total/%d',orid);
     if ~exist(directory,'dir')
         mkdir(directory)
     end
+    
+    
     %filename = sprintf('3comp_xcorr_%d_%dsamples_%1.1f_%s.png',orid,numel(needle.HHZ),cutoff_val,stationz);
     %filename_wPath = fullfile(directory,filename);
     %hgexport(h, filename_wPath, hgexport('factorystyle'), 'Format', 'png');

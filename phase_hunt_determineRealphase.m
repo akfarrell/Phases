@@ -4,18 +4,22 @@
 %orid2034 is origin 128
 %orid2277 is origin 277
 tic
-addpath('/raid/home/a/akfarrell/')
-addpath('/raid/home/a/akfarrell/Uturuncu')
-addpath('/raid/home/a/akfarrell/Polarizemic-master/functions/')
+addpath('/Users/alexandrafarrell/Desktop/akfarrell/')
+addpath('/Users/alexandrafarrell/Desktop/akfarrell/Uturuncu')
+addpath('/Users/alexandrafarrell/Desktop/akfarrell/Polarizemic-master/functions/')
+
 %clear;
 clear all; close all; clc;
 %fil=[2 25];
 %fil=[10 20];
-[oridStruct, allorids] = get_eq_info(); 
+% [evidStruct, allevids] = get_eq_info();
+[evidStruct_error, allevids_error] = get_eq_info('/Users/alexandrafarrell/Desktop/akfarrell/heather/dbmerged','true'); %relocated, with errors (excludes all m<0.5
+
+[evidStruct_unchecked_error, allevids_unchecked_error] = get_eq_info('/Users/alexandrafarrell/Desktop/dbplutons_alex','true'); %not relocated, with errors
 load('siteStruct.mat');
 %stylie = 'min'; %%%%% CHANGE!!!---------0----min,max,abz
 stylie = {'max','min'};
-load('phaseStruct.mat')
+% load('phaseStruct.mat')
 %ch = {'HHE','HHN','HHZ'};
 ch = {'HHZ','HHN','HHE'};
 ch2 = {'HHZ','HHR','HHT'};
@@ -26,46 +30,56 @@ num_samps = 31;
 %close all
 % eq = 2066;
 % stasz = 'PLLL';
-eq = 2166;
-stasz = 'PLJR';
+eq = 2501;
+stasz = 'PLHS';
 Pvel = 4.2; %km/s
 Svel = 2.35; %km/s
 %val_try = 297; % If commented out, find val_try (is P_ind or S_ind)
-val_try = datenum(2011,04,29,19,15,59.686)
-
+val_try = 482 %datenum(2011,04,29,19,15,59.686)
 
 %%
-count=find(allorids == eq);
-directory = '/home/a/akfarrell/Uturuncu/Phase/wf_objs';
-filename = sprintf('wf_%d.mat',allorids(count));
+if intersect(allevids_error,eq)
+    count=find(allevids_error == eq);
+    evidStruct = evidStruct_error;
+    allevids = allevids_error;
+elseif intersect(allevids_unchecked_error,eq)
+    count=find(allevids_unchecked_error == eq);
+    evidStruct = evidStruct_unchecked_error;
+    allevids = allevids_unchecked_error;
+end
+    
+directory = '/Users/alexandrafarrell/Desktop/akfarrell/Uturuncu/Phase/wf_objs';
+filename = sprintf('wf_%d.mat',allevids(count));
 filename_wPath = fullfile(directory,filename);
 %if exist(filename_wPath,'file')
 %    load(filename_wPath)
 %else
-    %create and clean waveform object
-    [w_raw,OrS,stations_inEq] = get_wf(allorids(count),oridStruct);
-    %w_clean_filt = waveform_clean(w_raw, filterobject('b', fil, 2));
-    w_clean = waveform_clean(w_raw);
-    %save(filename_wPath,'w_clean', 'OrS', 'stations_inEq');
+%create and clean waveform object
+fil = [0.8 26];
+[w_raw,EvS,stations_inEq] = get_wf(allevids(count),evidStruct);
+w_clean = waveform_clean(w_raw, filterobject('b', fil, 2));
+% w_clean = waveform_clean(w_raw);
+%save(filename_wPath,'w_clean', 'OrS', 'stations_inEq');
 %end
 stationz = get(w_clean,'station');
-
+P_pad = 12;
+S_pad = 25;
 %%
 count2 = min(find(strcmp(stasz,stationz)));%:3:numel(w_clean) %43-45 is PLMN 43:3:43
 %HHE = count, HHN = count+1, HHZ = count+2
 
-fname = sprintf('corr_%d_%s_%s.mat',allorids(count),stationz{count2},stylie{1});
-directory = '/home/a/akfarrell/Uturuncu/Phase/wf_objs';
-directory2 = sprintf('/home/a/akfarrell/Uturuncu/Phase/corrs/%d',allorids(count));
+fname = sprintf('corr_%d_%s_%s.mat',allevids(count),stationz{count2},stylie{1});
+directory = '/Users/alexandrafarrell/Desktop/akfarrell/Uturuncu/Phase/wf_objs';
+directory2 = sprintf('/Users/alexandrafarrell/Desktop/akfarrell/Uturuncu/Phase/corrs/%d',allevids(count));
 filename_wPath2 = fullfile(directory2,fname);
-load(filename_wPath2)
+% load(filename_wPath2)
 
-ind_P = intersect(find(strcmp(oridStruct.(OrS).sta,stationz{count2})),find(strcmp(oridStruct.(OrS).phase,'P')));
-time_Parr = oridStruct.(OrS).time_phase(ind_P);
+ind_P = intersect(find(strcmp(evidStruct.(EvS).sta,stationz{count2})),find(strcmp(evidStruct.(EvS).phase,'P')));
+time_Parr = evidStruct.(EvS).time_phase(ind_P);
 
 try
-    ind_S = intersect(find(strcmp(oridStruct.(OrS).sta,stationz{count2})),find(strcmp(oridStruct.(OrS).phase,'S')));
-    time_Sarr = oridStruct.(OrS).time_phase(ind_S);
+    ind_S = intersect(find(strcmp(evidStruct.(EvS).sta,stationz{count2})),find(strcmp(evidStruct.(EvS).phase,'S')));
+    time_Sarr = evidStruct.(EvS).time_phase(ind_S);
 catch
     ind_S = numel(get(w_clean(1),'data'));
 end
@@ -90,7 +104,48 @@ if val_try >2000
     val_try = find(dnum>=val_try, 1,'first'); %find index of value to try, if in dnum
 end
 
-c_orig=c;
+
+
+for count3 = 1:numel(ch)
+    Haystack_data.(ch{count3}) = get(w_clean(count2+count3-1),'data');
+    needle.(ch{count3}) = Haystack_data.(ch{count3})(P_ind:P_ind+num_samps-1);
+    %fix indexing issues
+    lngX = length(Haystack_data.(ch{count3}));
+    lngY = length(needle.(ch{count3}));
+    assert(lngX >= lngY);
+    lags = 0:(lngX-lngY);
+    for valz = lags
+        c.(ch{count3})(valz+1) = xcorr(Haystack_data.(ch{count3})(valz+1:valz+lngY) -...
+            mean(Haystack_data.(ch{count3})(valz+1:valz+lngY)), needle.(ch{count3}) - mean(needle.(ch{count3})),0,'coeff');
+    end
+    
+    c_backup.(ch{count3}) = c.(ch{count3}); %USE THIS VALUE TO ANNOTATE THE 3-COMPONENT PLOTS!!!!!!!!!!!-------------
+    c.(ch{count3}) = abs(c.(ch{count3}));
+    [m,i.(ch{count3})]=max(c.(ch{count3})(P_ind+P_pad:S_ind-S_pad)); %Pad P_ind and S_ind in range for max of abs val
+
+    i.(ch{count3}) = i.(ch{count3})+P_ind+P_pad;
+    %-------------------------UNCOMMENT PLOT IF WANT TO PLOT - 2 lines
+    %plot_xcorrs(lags, ch{count3}, Haystack_data.(ch{count3}), needle.(ch{count3}), c.(ch{count3}), stationz{count2}, ...
+    %cutoff_val, i.(ch{count3}), allevids(count), 1,P_ind+P_pad,S_ind-S_pad) %Make sure ind padding is same as line 64!!!
+    if m>= cutoff_val %%%only half setup for multiple returns that are greater than cutoff_val - need to finish if looking at this
+        values = find(c.(ch{count3})>=cutoff_val);
+        %---------------------UNCOMMENT PLOT IF WANT TO PLOT - 2 lines
+        %plot_xcorrs(lags, ch{count3}, Haystack_data.(ch{count3}), needle.(ch{count3}), c.(ch{count3}), stationz{count2}, ...
+        %cutoff_val, i.(ch{count3}), allevids(count), 2, P_ind,S_ind)
+        stations_w_highcorrs.(sprintf('eq_%d',allevids(count))).(stationz{count2}).(ch{count3}).val = m;
+        stations_w_highcorrs.(sprintf('eq_%d',allevids(count))).(stationz{count2}).(ch{count3}).index = i.(ch{count3});
+        %                 for indie = 1:numel(c.(ch{count3})>=cutoff_val)
+        %                     stations_w_highcorrs.(sprintf('eq_%d',allevids(count))).(stationz{count2}).(ch{count3}).val(indie) = m;
+        %                     stations_w_highcorrs.(sprintf('eq_%d',allevids(count))).(stationz{count2}).(ch{count3}).index(indie) = i.(ch{count3});
+        %                 end
+    end
+    clear m
+end
+
+
+
+
+% c_orig=c;
 c_total = c.(ch{1})+c.(ch{2})+c.(ch{3});
 c_abs_total = abs(c.(ch{1}))+abs(c.(ch{2}))+abs(c.(ch{3}));
 %P_pad = 15
@@ -101,12 +156,12 @@ for l = 2:numel(get(w_clean(count2),'data'))
     dnum(l) = datenum((l/freq)/SECSPERDAY+dnum(1));
 end
 numz = find(strcmp(siteStruct.sta,stasz));
-az = azimuth(siteStruct.lat(numz), siteStruct.lon(numz),oridStruct.(sprintf('eq_%d',eq)).lat(1),oridStruct.(sprintf('eq_%d',eq)).lon(1));
-starttime = oridStruct.(sprintf('eq_%d',eq)).time_phase(intersect(find(strcmp(oridStruct.(sprintf('eq_%d',eq)).phase,'P')),...
-    find(strcmp(oridStruct.(sprintf('eq_%d',eq)).sta,stasz))))-datenum(0,0,0,0,0,1);
+az = azimuth(siteStruct.lat(numz), siteStruct.lon(numz),evidStruct.(sprintf('eq_%d',eq)).lat(1),evidStruct.(sprintf('eq_%d',eq)).lon(1));
+starttime = evidStruct.(sprintf('eq_%d',eq)).time_phase(intersect(find(strcmp(evidStruct.(sprintf('eq_%d',eq)).phase,'P')),...
+    find(strcmp(evidStruct.(sprintf('eq_%d',eq)).sta,stasz))))-datenum(0,0,0,0,0,1);
 try
-    endtime = oridStruct.(sprintf('eq_%d',eq)).time_phase(intersect(find(strcmp(oridStruct.(sprintf('eq_%d',eq)).phase,'S')),...
-        find(strcmp(oridStruct.(sprintf('eq_%d',eq)).sta,stasz))))+datenum(0,0,0,0,0,1);
+    endtime = evidStruct.(sprintf('eq_%d',eq)).time_phase(intersect(find(strcmp(evidStruct.(sprintf('eq_%d',eq)).phase,'S')),...
+        find(strcmp(evidStruct.(sprintf('eq_%d',eq)).sta,stasz))))+datenum(0,0,0,0,0,1);
     w_clean_e = extract(w_clean,'TIME',starttime,endtime);
 catch
     endtime = dnum(end-num_samps);
@@ -164,9 +219,9 @@ end
 
 %%
 
-plot_xcorrs(lags, ch, Haystack_data, needle, c, stationz{count2}, cutoff_val, i2, allorids(count), 4,P_ind+P_pad,S_ind-S_pad)
-plot_xcorrs(lags, ch, Haystack_data, needle, c_t, stationz{count2}, cutoff_val*3, itmin, allorids(count), 4,P_ind+P_pad,S_ind-S_pad)
-plot_xcorrs(lags, ch, Haystack_data, needle, c_t, stationz{count2}, cutoff_val*3, itmax, allorids(count), 4,P_ind+P_pad,S_ind-S_pad)
+plot_xcorrs(lags, ch, Haystack_data, needle, c, stationz{count2}, cutoff_val, i2, allevids(count), 4,P_ind+P_pad,S_ind-S_pad)
+plot_xcorrs(lags, ch, Haystack_data, needle, c_t, stationz{count2}, cutoff_val*3, itmin, allevids(count), 4,P_ind+P_pad,S_ind-S_pad)
+plot_xcorrs(lags, ch, Haystack_data, needle, c_t, stationz{count2}, cutoff_val*3, itmax, allevids(count), 4,P_ind+P_pad,S_ind-S_pad)
 % if exist('iatmax','var')
 %     plot_xcorrs(lags, ch, Haystack_data, needle, c_a_t, stationz{count2}, cutoff_val*3, iatmax, allorids(count), 4,P_ind+P_pad,S_ind-S_pad)
 % end

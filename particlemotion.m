@@ -53,13 +53,15 @@ end
 if length(varargin) >= 1
     dt = varargin{1};
 else
-    dt = 86400 * get(TC(1).traces(1),'DURATION' ) / 200; %100
+    disp('dt:')
+    dt = 86400 * get(TC(1).traces(1),'DURATION' ) / 500%200 %100
 end
 
 if length(varargin) >= 2
     width = varargin{2};
 else
-    width = 86400 * get(TC(1).traces(1),'DURATION' ) / 10; % 10
+    disp('width')
+    width = 86400 * get(TC(1).traces(1),'DURATION' ) / 100 % 10
 end
 
 disp(['Time step: ' num2str(dt,'%4.3f') '    Window width: ' num2str(width,'%4.3f') ]);

@@ -15,7 +15,7 @@ num_phase=val;
 %[w_raw,OrS,stations_inEq] = get_wf(Or,oridStruct)
 %% - same as big_stat_shit.eqs.eq_2166
 % clear stat_shit
- statz={'timeres','smajax','sminax','sdepth','stime','deltim'};
+ statz={'timeres','smajax','sminax','sdepth','stime','deltim','strike','seaz','esaz','stx','conf'};
 % for s=1:numel(statz)
 %     if s==1
 %         stat_shit.(sprintf('max_%s',statz{s}))=max(oridStruct.(OrS).(statz{s}));

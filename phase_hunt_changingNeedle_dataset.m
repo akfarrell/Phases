@@ -1,12 +1,13 @@
-% function high_corrs = phase_hunt_changingNeedle_mins(allorids,oridStruct,P,fil,cutoff_val)
-% find(strcmp(fieldnames(oridStruct),'eq_whatever')) %to find eq
-%orid2166 is origin 203
-%orid2034 is origin 128
-%orid2277 is origin 277
+% function high_corrs = phase_hunt_changingNeedle_mins(allevids,evidStruct,P,fil,cutoff_val)
+% find(strcmp(fieldnames(evidStruct),'eq_whatever')) %to find eq
+%evid2166 is origin 203
+%evid2034 is origin 128
+%evid2277 is origin 277
 tic
 clear all;
-fil=[2 25];
-[oridStruct, allorids] = get_eq_info();
+fil=[0.8 25];
+[evidStruct, allevids] = get_eq_info('/Users/alexandrafarrell/Desktop/dbplutons_alex','true');
+%[evidStruct, allevids] = get_eq_info();
 stylie = 'max'; %%%%% CHANGE!!!---------0----min,max,abz
 ch = {'HHE','HHN','HHZ'};
 cutoff_val = 0.8;
@@ -20,20 +21,21 @@ failz = zeros(1,1);
 clear peaces
 clear stationz
 clear brrt
-for count=203%311:numel(allorids) %Probably have to do in chunks... 1:200, 201:250,251:310,311:numel(allorids) 
+for count=401:numel(allevids)%311:numel(allevids) %Probably have to do in chunks... 1:200, 201:250,251:310,311:numel(allevids) 
     close all
-    directory = '/home/a/akfarrell/Uturuncu/Phase/wf_objs';
-    filename = sprintf('wf_%d.mat',allorids(count));
+    directory = '/Users/alexandrafarrell/Desktop/akfarrell/Uturuncu/Phase/wf_objs';
+    filename = sprintf('wf_%d.mat',allevids(count));
     filename_wPath = fullfile(directory,filename);
 %     if exist(filename_wPath,'file')
 %         load(filename_wPath)
 %     else
         %create and clean waveform object
-        [w_raw,OrS,stations_inEq] = get_wf(allorids(count),oridStruct);
+        [w_raw,EvS,stations_inEq] = get_wf(allevids(count),evidStruct);
         w_clean = waveform_clean(w_raw, filterobject('b', fil, 2));
-        save(filename_wPath,'w_clean', 'OrS', 'stations_inEq');
+        save(filename_wPath,'w_clean', 'EvS', 'stations_inEq');
 %     end
     %%
+    EvS
     stationz = get(w_clean,'station');
     brrt = unique(stationz);
     peaces = zeros(1,numel(brrt));
@@ -42,11 +44,11 @@ for count=203%311:numel(allorids) %Probably have to do in chunks... 1:200, 201:2
     end
     %%
     if numel(find(peaces~=3))~=0
-        failz(numel(failz)+1) = allorids(count); %indexing is at +1
+        failz(numel(failz)+1) = allevids(count); %indexing is at +1
         
     else
         %%
-        for count2 = 1:3:69%1:3:numel(w_clean) %43-45 is PLMN 43:3:43
+        for count2 = 1:3:numel(w_clean) %43-45 is PLMN 43:3:43
             count2
             clear data_sig
             clear inds
@@ -60,14 +62,15 @@ for count=203%311:numel(allorids) %Probably have to do in chunks... 1:200, 201:2
             clear S_ind
             clear needle
             clear Haystack_data
-            if find(intersect(find(strcmp(oridStruct.(OrS).sta,stationz{count2})),find(strcmp(oridStruct.(OrS).phase,'P'))))==1
+            if ~isempty(intersect(find(strcmp(evidStruct.(EvS).sta,stationz{count2})),find(strcmp(evidStruct.(EvS).phase,'P'))))==1 && ...
+                  ~isempty(intersect(find(strcmp(evidStruct.(EvS).sta,stationz{count2})),find(strcmp(evidStruct.(EvS).phase,'S'))))
                 %HHE = count, HHN = count+1, HHZ = count+2
                 %find P arrival to rule it out
-                ind_P = intersect(find(strcmp(oridStruct.(OrS).sta,stationz{count2})),find(strcmp(oridStruct.(OrS).phase,'P')));
-                time_Parr = oridStruct.(OrS).time_phase(ind_P);
+                ind_P = intersect(find(strcmp(evidStruct.(EvS).sta,stationz{count2})),find(strcmp(evidStruct.(EvS).phase,'P')));
+                time_Parr = evidStruct.(EvS).time_phase(ind_P);
                 try
-                    ind_S = intersect(find(strcmp(oridStruct.(OrS).sta,stationz{count2})),find(strcmp(oridStruct.(OrS).phase,'S')));
-                    time_Sarr = oridStruct.(OrS).time_phase(ind_S);
+                    ind_S = intersect(find(strcmp(evidStruct.(EvS).sta,stationz{count2})),find(strcmp(evidStruct.(EvS).phase,'S')));
+                    time_Sarr = evidStruct.(EvS).time_phase(ind_S);
                 catch
                     ind_S = numel(get(w_clean(count2), 'data'));
                 end
@@ -113,30 +116,30 @@ for count=203%311:numel(allorids) %Probably have to do in chunks... 1:200, 201:2
                     i.(ch{count3}) = i.(ch{count3})+P_ind+P_pad;
                     %-------------------------UNCOMMENT PLOT IF WANT TO PLOT - 2 lines
                     %plot_xcorrs(lags, ch{count3}, Haystack_data.(ch{count3}), needle.(ch{count3}), c.(ch{count3}), stationz{count2}, ...
-                        %cutoff_val, i.(ch{count3}), allorids(count), 1,P_ind+P_pad,S_ind-S_pad) %Make sure ind padding is same as line 64!!!
+                        %cutoff_val, i.(ch{count3}), allevids(count), 1,P_ind+P_pad,S_ind-S_pad) %Make sure ind padding is same as line 64!!!
                     if m>= cutoff_val %%%only half setup for multiple returns that are greater than cutoff_val - need to finish if looking at this
                         values = find(c.(ch{count3})>=cutoff_val);
                         %---------------------UNCOMMENT PLOT IF WANT TO PLOT - 2 lines
                         %plot_xcorrs(lags, ch{count3}, Haystack_data.(ch{count3}), needle.(ch{count3}), c.(ch{count3}), stationz{count2}, ...
-                            %cutoff_val, i.(ch{count3}), allorids(count), 2, P_ind,S_ind)
-                        stations_w_highcorrs.(sprintf('eq_%d',allorids(count))).(stationz{count2}).(ch{count3}).val = m;
-                        stations_w_highcorrs.(sprintf('eq_%d',allorids(count))).(stationz{count2}).(ch{count3}).index = i.(ch{count3});
+                            %cutoff_val, i.(ch{count3}), allevids(count), 2, P_ind,S_ind)
+                        stations_w_highcorrs.(sprintf('eq_%d',allevids(count))).(stationz{count2}).(ch{count3}).val = m;
+                        stations_w_highcorrs.(sprintf('eq_%d',allevids(count))).(stationz{count2}).(ch{count3}).index = i.(ch{count3});
         %                 for indie = 1:numel(c.(ch{count3})>=cutoff_val)
-        %                     stations_w_highcorrs.(sprintf('eq_%d',allorids(count))).(stationz{count2}).(ch{count3}).val(indie) = m;
-        %                     stations_w_highcorrs.(sprintf('eq_%d',allorids(count))).(stationz{count2}).(ch{count3}).index(indie) = i.(ch{count3});
+        %                     stations_w_highcorrs.(sprintf('eq_%d',allevids(count))).(stationz{count2}).(ch{count3}).val(indie) = m;
+        %                     stations_w_highcorrs.(sprintf('eq_%d',allevids(count))).(stationz{count2}).(ch{count3}).index(indie) = i.(ch{count3});
         %                 end
                     end
                     clear m
                 end
-                fname = sprintf('corr_%d_%s_%s.mat',allorids(count),stationz{count2},stylie);
-                directory = '/home/a/akfarrell/Uturuncu/Phase/wf_objs';
-                directory2 = sprintf('/home/a/akfarrell/Uturuncu/Phase/corrs/%d',allorids(count));
+                fname = sprintf('corr_%d_%s_%s.mat',allevids(count),stationz{count2},stylie);
+                directory = '/Users/alexandrafarrell/Desktop/akfarrell/Uturuncu/Phase/wf_objs';
+                directory2 = sprintf('/Users/alexandrafarrell/Desktop/akfarrell/Uturuncu/Phase/corrs/%d',allevids(count));
                 filename_wPath2 = fullfile(directory2,fname);
                 if ~exist(directory2,'dir')
                     mkdir(directory2)
                 end
                 save(filename_wPath2,'c','i', 'lags','P_ind','P_pad','S_ind','S_pad')
-                plot_xcorrs(lags, ch, Haystack_data, needle, c, stationz{count2}, cutoff_val, i, allorids(count), 4,P_ind+P_pad,S_ind-S_pad)
+                plot_xcorrs(lags, ch, Haystack_data, needle, c, stationz{count2}, cutoff_val, i, allevids(count), 4,P_ind+P_pad,S_ind-S_pad)
                 clear i
                 clear lags
                 %%
@@ -168,9 +171,9 @@ for count=203%311:numel(allorids) %Probably have to do in chunks... 1:200, 201:2
 %                 end
         %%
         %         try
-            %         plot_xcorrs(lags, ch, Haystack_data, needle, c_total, stationz{count2}, overall_cutoff, data_sig, allorids(count), 3, P_ind,S_ind)
-            %         plot_xcorrs(lags, ch, Haystack_data, needle, c_total, stationz{count2}, overall_cutoff, data_sig, allorids(count), 3, P_ind,S_ind,inds,'best')
-            %         plot_xcorrs(lags, ch, Haystack_data, needle, c_total, stationz{count2}, overall_cutoff, data_sig, allorids(count), 3, P_ind,S_ind,inds_backup,'all')
+            %         plot_xcorrs(lags, ch, Haystack_data, needle, c_total, stationz{count2}, overall_cutoff, data_sig, allevids(count), 3, P_ind,S_ind)
+            %         plot_xcorrs(lags, ch, Haystack_data, needle, c_total, stationz{count2}, overall_cutoff, data_sig, allevids(count), 3, P_ind,S_ind,inds,'best')
+            %         plot_xcorrs(lags, ch, Haystack_data, needle, c_total, stationz{count2}, overall_cutoff, data_sig, allevids(count), 3, P_ind,S_ind,inds_backup,'all')
         % 
         % 
         %         catch

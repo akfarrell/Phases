@@ -1,39 +1,39 @@
 function makeTXTfiles(phaseStruct,eq,stations,testvar)
     if strcmp(testvar,'az_W_calc')
-        fid1 = fopen('diff_expP_auto.txt','w');
+        fid1 = fopen(sprintf('%s_diff_expP_auto.txt',eq),'w');
         fprintf(fid1,'Vals-expected P-wave arrival autocalc\ndiff_expP_auto.txt from maps_phasestuff.m\n\n');
         
-        fid2 = fopen('diff_calcP_auto.txt','w');
+        fid2 = fopen(sprintf('%s_diff_calcP_auto.txt',eq),'w');
         fprintf(fid2,'Vals-calculated P-wave arrival autocalc\ndiff_calcP_auto.txt from maps_phasestuff.m\n\n');
         
-        fid3 = fopen('just_vals_auto.txt','w');
+        fid3 = fopen(sprintf('%s_just_vals_auto.txt',eq),'w');
         fprintf(fid3,'Raw values autocalc\njust_vals_auto.txt from maps_phasestuff.m\n\n');
     elseif strcmp(testvar,'azWest')
-        fid1 = fopen('diff_expP.txt','w');
+        fid1 = fopen(sprintf('%s_diff_expP.txt',eq),'w');
         fprintf(fid1,'Vals-expected P-wave arrival\ndiff_expP.txt from maps_phasestuff.m\n\n');
         
-        fid2 = fopen('diff_calcP.txt','w');
+        fid2 = fopen(sprintf('%s_diff_calcP.txt',eq),'w');
         fprintf(fid2,'Vals-calculated P-wave arrival\ndiff_calcP.txt from maps_phasestuff.m\n\n');
         
-        fid3 = fopen('just_vals.txt','w');
+        fid3 = fopen(sprintf('%s_just_vals.txt',eq),'w');
         fprintf(fid3,'Raw values\njust_vals.txt from maps_phasestuff.m\n\n');
     elseif strcmp(testvar,'inc_W_calc')
-        fid1 = fopen('diff_inc_expP_auto.txt','w');
+        fid1 = fopen(sprintf('%s_diff_inc_expP_auto.txt',eq),'w');
         fprintf(fid1,'Vals-expected P-wave arrival inc autocalc\ndiff_inc_expP_auto.txt from maps_phasestuff.m\n\n');
         
-        fid2 = fopen('diff_inc_calcP_auto.txt','w');
+        fid2 = fopen(sprintf('%s_diff_inc_calcP_auto.txt',eq),'w');
         fprintf(fid2,'Vals-calculated P-wave arrival inc autocalc\ndiff_inc_calcP_auto.txt from maps_phasestuff.m\n\n');
         
-        fid3 = fopen('just_inc_vals_auto.txt','w');
+        fid3 = fopen(sprintf('%s_just_inc_vals_auto.txt',eq),'w');
         fprintf(fid3,'Raw values inc autocalc\njust_inc_vals_auto.txt from maps_phasestuff.m\n\n');
     elseif strcmp(testvar,'incWest')
-        fid1 = fopen('diff_inc_expP.txt','w');
+        fid1 = fopen(sprintf('%s_diff_inc_expP.txt',eq),'w');
         fprintf(fid1,'Vals-expected P-wave arrival inc\ndiff_inc_expP.txt from maps_phasestuff.m\n\n');
         
-        fid2 = fopen('diff_inc_calcP.txt','w');
+        fid2 = fopen(sprintf('%s_diff_inc_calcP.txt',eq),'w');
         fprintf(fid2,'Vals-calculated P-wave arrival inc\ndiff_inc_calcP.txt from maps_phasestuff.m\n\n');
         
-        fid3 = fopen('just_inc_vals.txt','w');
+        fid3 = fopen(sprintf('%s_just_inc_vals.txt',eq),'w');
         fprintf(fid3,'Raw values inc\njust_inc_vals.txt from maps_phasestuff.m\n\n');
     end
     
@@ -43,10 +43,10 @@ function makeTXTfiles(phaseStruct,eq,stations,testvar)
     for count = 1:numel(stations)
         vals = phaseStruct.(eq).(stations{count}).(testvar);
         if strfind(testvar,'az')
-            if phaseStruct.(eq).(stations{count}).az_exp > 360
-                expected = phaseStruct.(eq).(stations{count}).az_exp-360;
+            if phaseStruct.(eq).(stations{count}).az_exp_adj > 360
+                expected = phaseStruct.(eq).(stations{count}).az_exp_adj-360;
             else
-                expected = phaseStruct.(eq).(stations{count}).az_exp;
+                expected = phaseStruct.(eq).(stations{count}).az_exp_adj;
             end
         elseif strfind(testvar,'inc')
             expected = phaseStruct.(eq).(stations{count}).inc_exp;

@@ -29,11 +29,12 @@ title('HHZ')
 % catch
 %     xlim([P_ind-pad numel(Haystack_data.HHZ)])
 % end
-           if S_ind > xmax
-                xlim([P_ind-pad, xmax])
-            else
-                xlim([P_ind-pad, S_ind+pad])
-            end
+if S_ind > xmax
+    xlim([P_ind-pad, S_ind+pad])
+else
+    xlim([P_ind-pad, xmax])
+%     xlim([max(P_ind-pad,1), min(S_ind+pad,xmax)])
+end
 
 
 h = plot(tcrp_az);
@@ -77,11 +78,12 @@ hold off
 % catch
 %     xlim([(P_ind-pad)/100 numel(Haystack_data.HHZ)])
 % end
-           if S_ind > xmax
-                xlim([(P_ind-pad)/100, xmax/100])
-            else
-                xlim([(P_ind-pad)/100, (S_ind+pad)/100])
-            end
+if S_ind > xmax
+    xlim([(P_ind-pad)/100, (S_ind+pad)/100])
+else
+    xlim([(P_ind-pad)/100, xmax/100])
+%     xlim([max(P_ind-pad,1), min(S_ind+pad,xmax)])
+end
 
 figure()
 plot(Haystack_data.(ch{2}))
@@ -103,11 +105,12 @@ line([val_try val_try], [min(Haystack_data.(ch{2})), max(Haystack_data.(ch{2}))]
     'Color','b','LineStyle',':','LineWidth',2)
 ylim([min(Haystack_data.(ch{2})), max(Haystack_data.(ch{2}))])
 title(sprintf('%s',ch{2}))
-            if S_ind > xmax
-                xlim([P_ind-pad, xmax])
-            else
-                xlim([P_ind-pad, S_ind+pad])
-            end
+if S_ind > xmax
+    xlim([P_ind-pad, S_ind+pad])
+else
+    xlim([P_ind-pad, xmax])
+%     xlim([max(P_ind-pad,1), min(S_ind+pad,xmax)])
+end
 plot(tcrp_inc)
 hold on
 try
@@ -128,11 +131,12 @@ try
 catch
 end
 hold off
-           if S_ind > xmax
-                xlim([(P_ind-pad)/100, xmax/100])
-            else
-                xlim([(P_ind-pad)/100, (S_ind+pad)/100])
-            end
+if S_ind > xmax
+    xlim([(P_ind-pad)/100, (S_ind+pad)/100])
+else
+    xlim([(P_ind-pad)/100, xmax/100])
+%     xlim([max(P_ind-pad,1), min(S_ind+pad,xmax)])
+end
 
 
 figure()
@@ -155,11 +159,12 @@ line([val_try val_try], [min(Haystack_data.(ch{3})), max(Haystack_data.(ch{3}))]
     'Color','b','LineStyle',':','LineWidth',2)
 ylim([min(Haystack_data.(ch{3})), max(Haystack_data.(ch{3}))])
 title(sprintf('%s',ch{3}))
-            if S_ind > xmax
-                xlim([P_ind-pad, xmax])
-            else
-                xlim([P_ind-pad, S_ind+pad])
-            end
+if S_ind > xmax
+    xlim([P_ind-pad, S_ind+pad])
+else
+    xlim([P_ind-pad, xmax])
+%     xlim([max(P_ind-pad,1), min(S_ind+pad,xmax)])
+end
 
 plot(tcrp_rec)
 hold on
@@ -181,12 +186,12 @@ try
 catch
 end
 hold off
-           if S_ind > xmax
-                xlim([(P_ind-pad)/100, xmax/100])
-            else
-                xlim([(P_ind-pad)/100, (S_ind+pad)/100])
-            end
-
+if S_ind > xmax
+    xlim([(P_ind-pad)/100, (S_ind+pad)/100])
+else
+    xlim([(P_ind-pad)/100, xmax/100])
+%     xlim([max(P_ind-pad,1), min(S_ind+pad,xmax)])
+end
 
 plot(tcrp_plan)
 hold on
@@ -207,11 +212,12 @@ try
 catch
 end
 hold off
-           if S_ind > xmax
-                xlim([(P_ind-pad)/100, xmax/100])
-            else
-                xlim([(P_ind-pad)/100, (S_ind+pad)/100])
-            end
+if S_ind > xmax
+    xlim([(P_ind-pad)/100, (S_ind+pad)/100])
+else
+    xlim([(P_ind-pad)/100, xmax/100])
+%     xlim([max(P_ind-pad,1), min(S_ind+pad,xmax)])
+end
 
 
 plot(tcrp_en)
@@ -233,11 +239,12 @@ try
 catch
 end
 hold off
-           if S_ind > xmax
-                xlim([(P_ind-pad)/100, xmax/100])
-            else
-                xlim([(P_ind-pad)/100, (S_ind+pad)/100])
-            end
+if S_ind > xmax
+    xlim([(P_ind-pad)/100, (S_ind+pad)/100])
+else
+    xlim([(P_ind-pad)/100, xmax/100])
+%     xlim([max(P_ind-pad,1), min(S_ind+pad,xmax)])
+end
 
 % Now create destination graph
 fn = findobj('type','figure');

@@ -1,12 +1,12 @@
 %% Loading in inflection point data
 tic
 close all
-load('oridStruct.mat')
+[evidStruct, allevids] = get_eq_info();
 load('failz_final.mat')
 load('siteStruct.mat')
-namez = fieldnames(oridStruct);
-good_orids = zeros(1,1);
-discard_orids = zeros(1,1);
+namez = fieldnames(evidStruct);
+good_evids = zeros(1,1);
+discard_evids = zeros(1,1);
 
 %% Plot 
 p=figure; hold on;
@@ -41,31 +41,31 @@ plotm(stn_lat,stn_lon);
 %%
 for count = 1:numel(namez)
     name_val = str2double(strrep(namez{count},'eq_',''));
-    if any(name_val==failz)
-    else
-        if inpolygon(oridStruct.(namez{count}).lon(1),oridStruct.(namez{count}).lat(1),stn_lon,stn_lat)
-            good_orids(numel(good_orids)+1) = name_val; %indexing is at +1
-            scatterm(oridStruct.(namez{count}).lat(1), oridStruct.(namez{count}).lon(1), 50,'o','k')
+%     if any(name_val==failz)
+%     else
+        if inpolygon(evidStruct.(namez{count}).lon(1),evidStruct.(namez{count}).lat(1),stn_lon,stn_lat)
+            good_evids(numel(good_evids)+1) = name_val; %indexing is at +1
+            scatterm(evidStruct.(namez{count}).lat(1), evidStruct.(namez{count}).lon(1), 50,'o','k')
         else
-            discard_orids(numel(discard_orids)+1) = name_val;
-            scatterm(oridStruct.(namez{count}).lat(1), oridStruct.(namez{count}).lon(1), 50,'o','c')
+            discard_evids(numel(discard_evids)+1) = name_val;
+            scatterm(evidStruct.(namez{count}).lat(1), evidStruct.(namez{count}).lon(1), 50,'o','c')
         end
-    end
+%     end
 end
 
 %% Saving file
 hold off
-directory = '/home/a/akfarrell/Uturuncu/Phase/';
+directory = '/Users/alexandrafarrell/Desktop/akfarrell/Uturuncu/Phase/';
 filename = 'ALLeqs_used_map.png';
 filename_wPath = fullfile(directory,filename);
 hgexport(p, filename_wPath, hgexport('factorystyle'), 'Format', 'png');
 
 %% Refine which orids are used and make text file of discard orids
-good_orids = good_orids(2:end);
-discard_orids = discard_orids(2:end);
-save('good_orids.mat','good_orids')
-save('discard_orids.mat','discard_orids')
-fileID = fopen('discard_orids.txt','w');
-fprintf(fileID,'%d\n',discard_orids);
+good_evids = good_evids(2:end);
+discard_evids = discard_evids(2:end);
+save('good_evids.mat','good_evids')
+save('discard_evids.mat','discard_evids')
+fileID = fopen('discard_evids.txt','w');
+fprintf(fileID,'%d\n',discard_evids);
 fclose(fileID);
 toc

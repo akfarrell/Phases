@@ -1,6 +1,6 @@
-eq_id = 'eq_2166';
-w = prep_for_rs(w_clean(1:3:end),eq_id,siteStruct,oridStruct);
-load('phaseStruct_backup/pS1.mat');
+eq_id = 'eq_2165';
+w = prep_for_rs(w_clean(1:3:end),eq_id,siteStruct,evidStruct);
+load('phaseStruct.mat');
 stnz = get(w, 'station');
 sta = fieldnames(phaseStruct.(eq_id));
 
@@ -12,8 +12,8 @@ EVLA = get(w(1),'EVLA');
 EVLO = get(w(1),'EVLO');
 for count = 1:numel(sta)
     w_ind = find(strcmp(stnz,sta(count)));
-    op_ind = intersect(find(strcmp(oridStruct.(eq_id).sta, sta(count))), find(strcmp(oridStruct.(eq_id).phase,'P')));
-    os_ind = intersect(find(strcmp(oridStruct.(eq_id).sta, sta(count))), find(strcmp(oridStruct.(eq_id).phase,'S'))); 
+    op_ind = intersect(find(strcmp(evidStruct.(eq_id).sta, sta(count))), find(strcmp(evidStruct.(eq_id).phase,'P')));
+    os_ind = intersect(find(strcmp(evidStruct.(eq_id).sta, sta(count))), find(strcmp(evidStruct.(eq_id).phase,'S'))); 
     STLA = get(w(w_ind),'STLA');
     STLO = get(w(w_ind),'STLO');
     STEL = get(w(w_ind),'STEL');
@@ -21,24 +21,24 @@ for count = 1:numel(sta)
     height = STEL-EVDP; %diff in elevation btw event and station
     h = sqrt(d^2+height^2);%distance taking elevation into account
     hypee(count) = h; % all with -ee are for putting into phaseStruct
-    p_arree(count) = oridStruct.(eq_id).time_phase(op_ind);
+    p_arree(count) = evidStruct.(eq_id).time_phase(op_ind);
     
-    hyp(sze+1:sze+numel(phaseStruct.(eq_id).(sta{count}))) = h;
-    dist(sze+1:sze+numel(phaseStruct.(eq_id).(sta{count}))) = d;
-    time(sze+1:sze+numel(phaseStruct.(eq_id).(sta{count})))...
-        = phaseStruct.(eq_id).(sta{count});
-    p_arr(sze+1:sze+numel(phaseStruct.(eq_id).(sta{count}))) ...
-        = oridStruct.(eq_id).time_phase(op_ind);
-    stationsies(sze+1:sze+numel(phaseStruct.(eq_id).(sta{count}))) = sta(count);
+    hyp(sze+1:sze+numel(phaseStruct.(eq_id).(sta{count}).phase_arr)) = h;
+    dist(sze+1:sze+numel(phaseStruct.(eq_id).(sta{count}).phase_arr)) = d;
+    time(sze+1:sze+numel(phaseStruct.(eq_id).(sta{count}).phase_arr))...
+        = phaseStruct.(eq_id).(sta{count}).phase_arr;
+    p_arr(sze+1:sze+numel(phaseStruct.(eq_id).(sta{count}).phase_arr)) ...
+        = evidStruct.(eq_id).time_phase(op_ind);
+    stationsies(sze+1:sze+numel(phaseStruct.(eq_id).(sta{count}).phase_arr)) = sta(count);
     if ~isempty(os_ind)
-        s_arr(sze+1:sze+numel(phaseStruct.(eq_id).(sta{count}))) ...
-            = oridStruct.(eq_id).time_phase(os_ind);
-        s_arree(count) = oridStruct.(eq_id).time_phase(os_ind);
+        s_arr(sze+1:sze+numel(phaseStruct.(eq_id).(sta{count}).phase_arr)) ...
+            = evidStruct.(eq_id).time_phase(os_ind);
+        s_arree(count) = evidStruct.(eq_id).time_phase(os_ind);
     else
-        s_arr(sze+1:sze+numel(phaseStruct.(eq_id).(sta{count}))) = 1;  
+        s_arr(sze+1:sze+numel(phaseStruct.(eq_id).(sta{count}).phase_arr)) = 1;  
         s_arree(count) = 1;
     end
-    sze = sze+numel(phaseStruct.(eq_id).(sta{count}));
+    sze = sze+numel(phaseStruct.(eq_id).(sta{count}).phase_arr);
     clear w_ind STLA STLO STEL height h d
 end
 
